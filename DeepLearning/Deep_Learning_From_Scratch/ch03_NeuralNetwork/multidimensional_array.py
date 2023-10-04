@@ -1,5 +1,6 @@
 """
 3.3 多维数组的运算
+3.4 三层神经网络的实现
 """
 import numpy as np
 from matplotlib import pylab as plt
@@ -46,4 +47,3 @@ x = np.array([1.0, 0.5])
 network = init_network()
 y = forward(network, x)
 print(y)
-
