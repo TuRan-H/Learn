@@ -80,6 +80,4 @@ def get_accuary(network, input, tag, batch_size):
 
 x, t = get_data()
 network = init_network()
-# accuracy_rate = get_accuary(network, x, t, 100)
-# for i in range(10):
-# 	img_show(x[i])
+print(f"{get_accuary(network, x, t, 100)}%")
