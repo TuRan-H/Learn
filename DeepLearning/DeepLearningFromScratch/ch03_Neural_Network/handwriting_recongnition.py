@@ -1,5 +1,5 @@
 """
-利用Mnist数据集和给定的已训练好的network来实现手写数字识别
+3.6 利用Mnist数据集和给定的已训练好的network来实现手写数字识别
 """
 import pickle
 import sys, os
@@ -44,7 +44,7 @@ def init_network():
 	"""
 	从sample_weight.pkl文件中获取神经网络的参数
 	"""
-	with open("sample_weight.pkl", "rb") as fp:
+	with open("../sample_weight.pkl", "rb") as fp:
 		network = pickle.load(fp)
 	return network
 
