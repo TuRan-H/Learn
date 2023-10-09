@@ -1,13 +1,18 @@
-import numpy as np
+"""
+多个loss函数的实现
+	MSE_loss
+	CrossEntropy_Loss
+"""
 import sys, os
 sys.path.append(os.pardir)
+import numpy as np
 from dataset.mnist import load_mnist
 
 
 
 def MSE_Loss_Multiple(output, tag):
 	"""
-	计算均方误差(batch_size > 1)
+	计算均方误差
 	"""
 	result = 0.5*np.sum((output-tag)**2)
 	return result
