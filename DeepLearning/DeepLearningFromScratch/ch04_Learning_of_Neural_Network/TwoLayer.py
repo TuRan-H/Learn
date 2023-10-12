@@ -112,4 +112,3 @@ for i in range(iters_num):
 		train_accuracy_list.append(train_accuracy)
 		test_accuracy_list.append(test_accuracy)
 	print(f"{train_loss_list}\n{train_accuracy_list}\n{test_accuracy_list}")
-
