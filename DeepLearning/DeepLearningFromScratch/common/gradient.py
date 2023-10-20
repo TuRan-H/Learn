@@ -4,6 +4,9 @@ def function_2(x:np.ndarray):
 	return x[0]**2 + x[1]**2
 
 def numerical_gradient(f, x):
+	"""
+	传入函数f, 和需要求偏导的参数x, 输出x的偏导
+	"""
 	h = 1e-4 # 0.0001
 	grad = np.zeros_like(x)
 

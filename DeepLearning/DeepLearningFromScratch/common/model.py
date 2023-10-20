@@ -1,6 +1,3 @@
-"""
-5.7  误差反向传播法的实现
-"""
 import sys, os
 sys.path.append(os.getcwd())
 from collections import OrderedDict
