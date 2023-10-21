@@ -3,9 +3,9 @@
 """
 import sys,os
 import numpy as np
-sys.path.append(os.getcwd())
+sys.path.append(os.pardir)
 from dataset.mnist import load_mnist
-from common import model
+from common import functions,model
 
 (image_train, tag_train), (image_test, tag_test) = load_mnist(True, False, True)
 two_layer = model.TwoLayer(784, 50, 10)

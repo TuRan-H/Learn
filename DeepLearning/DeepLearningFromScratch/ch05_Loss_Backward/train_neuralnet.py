@@ -3,6 +3,7 @@
 """
 import sys, os
 import numpy as np
+
 sys.path.append(os.pardir)
 from common.model import TwoLayer
 from dataset.mnist import load_mnist

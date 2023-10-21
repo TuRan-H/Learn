@@ -34,5 +34,3 @@ class Sigmoid:
 		d_x = d_out * self.out * (1 - self.out)
 
 		return d_x
-
-print("hello world")
