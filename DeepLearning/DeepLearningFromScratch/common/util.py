@@ -24,7 +24,7 @@ def shuffle_dataset(x, t):
 
     Returns
     -------
-    x, t : 打乱的训练数据和监督数据
+    x1, t : 打乱的训练数据和监督数据
     """
     permutation = np.random.permutation(x.shape[0])
     x = x[permutation,:] if x.ndim == 2 else x[permutation,:,:,:]

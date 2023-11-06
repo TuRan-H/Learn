@@ -65,7 +65,7 @@ class TwoLayer:
 
 	def numercal_gradient(self, x, t):
 		"""
-		loss(x, t)函数对权重和偏置求梯度
+		loss(x1, t)函数对权重和偏置求梯度
 		@param x: 神经网络的输入值
 		@param t: 标签值
 		@return: 梯度的字典

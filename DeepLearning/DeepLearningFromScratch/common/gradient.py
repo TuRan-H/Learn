@@ -15,10 +15,10 @@ def numerical_gradient(f, x):
 		idx = it.multi_index
 		tmp_val = x[idx]
 		x[idx] = float(tmp_val) + h
-		fxh1 = f(x) # f(x+h)
+		fxh1 = f(x) # f(x1+h)
 
 		x[idx] = tmp_val - h
-		fxh2 = f(x) # f(x-h)
+		fxh2 = f(x) # f(x1-h)
 		grad[idx] = (fxh1 - fxh2) / (2*h)
 
 		x[idx] = tmp_val # 还原值
