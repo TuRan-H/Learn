@@ -38,18 +38,19 @@ def conv_output_size(input_size, filter_size, stride=1, pad=0):
 
 def im2col(input_data, filter_h, filter_w, stride=1, pad=0):
     """
+    将图像转化为多个行向量(矩阵)
 
-    Parameters
-    ----------
-    input_data : 由(数据量, 通道, 高, 长)的4维数组构成的输入数据
-    filter_h : 滤波器的高
-    filter_w : 滤波器的长
-    stride : 步幅
-    pad : 填充
+    Arguments:
+        input_data -- 四维数组组成的输入数据
+        filter_h -- 滤波器(卷积核)的高
+        filter_w -- 滤波器(卷积核)的宽
 
-    Returns
-    -------
-    col : 2维数组
+    Keyword Arguments:
+        stride -- 步长 (default: {1})
+        pad -- 填充 (default: {0})
+
+    Returns:
+        矩阵
     """
     N, C, H, W = input_data.shape
     out_h = (H + 2*pad - filter_h)//stride + 1
