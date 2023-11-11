@@ -1,5 +1,6 @@
 # coding: utf-8
 import sys, os
+from types import SimpleNamespace
 sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
 import pickle
 import numpy as np
@@ -9,33 +10,44 @@ from common.gradient import numerical_gradient
 
 
 class SimpleConvNet:
-    """简单的ConvNet
+    """
+    简单的ConvNet
 
     conv - relu - pool - affine - relu - affine - softmax
-    
-    Parameters
-    ----------
-    input_size : 输入大小（MNIST的情况下为784）
-    hidden_size_list : 隐藏层的神经元数量的列表（e.g. [100, 100, 100]）
-    output_size : 输出大小（MNIST的情况下为10）
-    activation : 'relu' or 'sigmoid'
-    weight_init_std : 指定权重的标准差（e.g. 0.01）
+ 
+    Paramenters
+    ---
+    input_size: 输入大小（MNIST的情况下为784
+
+    hidden_size: 隐藏层的神经元个数
+
+    output_size: 输出大小（MNIST的情况下为10)
+
+    activation: 'relu' or 'sigmoid'
+
+    weight_init_std: 
+        指定权重的标准差（e.g. 0.01)
+
         指定'relu'或'he'的情况下设定“He的初始值”
+
         指定'sigmoid'或'xavier'的情况下设定“Xavier的初始值”
     """
     def __init__(self, input_dim=(1, 28, 28), 
                  conv_param={'filter_num':30, 'filter_size':5, 'pad':0, 'stride':1},
                  hidden_size=100, output_size=10, weight_init_std=0.01):
-        filter_num = conv_param['filter_num']
-        filter_size = conv_param['filter_size']
-        filter_pad = conv_param['pad']
+        # 依次将字典中的值取出, 并放置到对应的变量中
+        filter_num = conv_param['filter_num']   # 卷积核的数量
+        filter_size = conv_param['filter_size']     # 卷积核的大小
+        filter_pad = conv_param['pad']      # 
         filter_stride = conv_param['stride']
         input_size = input_dim[1]
+        # 卷积层的输出size, 对于一个输入, 卷积层对其进行卷积之后, 输出的大小是: conv_output_size * conv_output_size, 因为对于本例而言, 卷积层输入的长和宽是相同的
         conv_output_size = (input_size - filter_size + 2*filter_pad) / filter_stride + 1
         pool_output_size = int(filter_num * (conv_output_size/2) * (conv_output_size/2))
 
         # 初始化权重
         self.params = {}
+        # 第一层的权重是卷积核, 因此, 第一层的shape是 (output_channel, input_channel, height, width)
         self.params['W1'] = weight_init_std * \
                             np.random.randn(filter_num, input_dim[0], filter_size, filter_size)
         self.params['b1'] = np.zeros(filter_num)

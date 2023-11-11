@@ -1,6 +1,4 @@
-"""
-6.4.3 Dropout
-"""
+# coding: utf-8
 import os
 import sys
 sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
@@ -12,16 +10,20 @@ from common.trainer import Trainer
 
 (x_train, t_train), (x_test, t_test) = load_mnist(normalize=True)
 
+# 为了再现过拟合，减少学习数据
 x_train = x_train[:300]
 t_train = t_train[:300]
 
+# 设定是否使用Dropuout，以及比例 ========================
 use_dropout = True  # 不使用Dropout的情况下为False
 dropout_ratio = 0.2
+# ====================================================
 
-network = MultiLayerNetExtend(input_size=784, hidden_size_list=[100, 100, 100, 100, 100, 100], 
-								output_size=10, use_dropout=use_dropout, dropout_ration=dropout_ratio)
-trainer = Trainer(network, x_train, t_train, x_test, t_test, 
-					epochs=301, mini_batch_size=100, optimizer='sgd', optimizer_param={'lr': 0.01}, verbose=True)
+network = MultiLayerNetExtend(input_size=784, hidden_size_list=[100, 100, 100, 100, 100, 100],
+                              output_size=10, use_dropout=use_dropout, dropout_ration=dropout_ratio)
+trainer = Trainer(network, x_train, t_train, x_test, t_test,
+                  epochs=301, mini_batch_size=100,
+                  optimizer='sgd', optimizer_param={'lr': 0.01}, verbose=True)
 trainer.train()
 
 train_acc_list, test_acc_list = trainer.train_acc_list, trainer.test_acc_list
