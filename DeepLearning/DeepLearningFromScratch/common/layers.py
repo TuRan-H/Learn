@@ -49,9 +49,19 @@ class Affine:
         self.db = None
 
     def forward(self, x):
-        # 对应张量
+        """
+        前向传播
+
+        paramters
+        ---
+        x: Affine层的输入
+
+        output
+        ---
+        Affine接受了输入x, 之后和weight运算后输出的结果
+        """
         self.original_x_shape = x.shape
-        x = x.reshape(x.shape[0], -1)
+        x = x.reshape(x.shape[0], -1)   # 展平化
         self.x = x
 
         out = np.dot(self.x, self.W) + self.b
@@ -59,6 +69,13 @@ class Affine:
         return out
 
     def backward(self, dout):
+        """
+        反向传播
+
+        paramenter
+        ---
+        dout: 反向传播时上一层传入Affine层的的梯度
+        """
         dx = np.dot(dout, self.W.T)
         self.dW = np.dot(self.x.T, dout)
         self.db = np.sum(dout, axis=0)

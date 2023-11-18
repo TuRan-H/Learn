@@ -95,7 +95,7 @@ class MultiLayerNet:
 
         weight_decay = 0
         for idx in range(1, self.hidden_layer_num + 2):
-            W = self.params['W' + str(idx)]
+            W = self.params['W' + str(idx)]     # 获取当前隐藏层的权重
             weight_decay += 0.5 * self.weight_decay_lambda * np.sum(W ** 2)
 
         return self.last_layer.forward(y, t) + weight_decay
@@ -156,8 +156,8 @@ class MultiLayerNet:
         layers.reverse()
         for layer in layers:
             dout = layer.backward(dout)
+            # 每一层都反向传播, 在backward方法中会将梯度保存到dW变量中
 
-        # 设定
         grads = {}
         for idx in range(1, self.hidden_layer_num+2):
             grads['W' + str(idx)] = self.layers['Affine' + str(idx)].dW + self.weight_decay_lambda * self.layers['Affine' + str(idx)].W

@@ -1,6 +1,8 @@
 # coding: utf-8
 import sys, os
 from types import SimpleNamespace
+
+import IPython
 sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
 import pickle
 import numpy as np

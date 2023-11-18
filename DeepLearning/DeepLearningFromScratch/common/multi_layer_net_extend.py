@@ -7,22 +7,32 @@ from common.layers import *
 from common.gradient import numerical_gradient
 
 class MultiLayerNetExtend:
-    """扩展版的全连接的多层神经网络
+    """
+    扩展版的全连接的多层神经网络
     
     具有Weiht Decay、Dropout、Batch Normalization的功能
 
     Parameters
     ----------
+
     input_size : 输入大小（MNIST的情况下为784）
+
     hidden_size_list : 隐藏层的神经元数量的列表（e.g. [100, 100, 100]）
+
     output_size : 输出大小（MNIST的情况下为10）
+
     activation : 'relu' or 'sigmoid'
+
     weight_init_std : 指定权重的标准差（e.g. 0.01）
         指定'relu'或'he'的情况下设定“He的初始值”
         指定'sigmoid'或'xavier'的情况下设定“Xavier的初始值”
+
     weight_decay_lambda : Weight Decay（L2范数）的强度
+
     use_dropout: 是否使用Dropout
+
     dropout_ration : Dropout的比例
+
     use_batchNorm: 是否使用Batch Normalization
     """
     def __init__(self, input_size, hidden_size_list, output_size,

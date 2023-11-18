@@ -56,8 +56,9 @@ class Nesterov:
 
 
 class AdaGrad:
-
-    """AdaGrad"""
+    """
+    Adaptive gradient: 适应性梯度
+    """
 
     def __init__(self, lr=0.01):
         self.lr = lr
@@ -71,7 +72,7 @@ class AdaGrad:
             
         for key in params.keys():
             self.h[key] += grads[key] * grads[key]
-            params[key] -= self.lr * grads[key] / (np.sqrt(self.h[key]) + 1e-7)
+            params[key] -= self.lr * grads[key] / (np.sqrt(self.h[key]) + 1e-7)     # 所有的参数中变动幅度(之前的梯度)越大的参数, 后续的梯度变动也就越小
 
 
 class RMSprop:

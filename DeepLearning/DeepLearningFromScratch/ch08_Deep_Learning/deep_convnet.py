@@ -17,6 +17,7 @@ class DeepConvNet:
         affine - relu - dropout - affine - dropout - softmax
     """
     def __init__(self, input_dim=(1, 28, 28),
+                # 为6个 convolution 分别定义了字典.
                  conv_param_1 = {'filter_num':16, 'filter_size':3, 'pad':1, 'stride':1},
                  conv_param_2 = {'filter_num':16, 'filter_size':3, 'pad':1, 'stride':1},
                  conv_param_3 = {'filter_num':32, 'filter_size':3, 'pad':1, 'stride':1},
