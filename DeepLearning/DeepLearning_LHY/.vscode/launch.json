@@ -1,0 +1,18 @@
+{
+	"configurations": [
+		{
+			"name": "python debug",
+			"type": "python",
+			"request": "launch",
+			"program": "${file}",
+			"console": "integratedTerminal",
+			"justMyCode": false,
+			"env": {
+				"PYTHONPATH":"${workspaceRoot}", // 设置python运行时的工作目录
+				"pythonArgs": "-u"  // 设置python解释器的运行参数 如 -u 等
+			},
+			"args": [
+			],
+		}
+	]
+}
