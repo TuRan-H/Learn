@@ -1,6 +1,6 @@
 from ast import Module
 from networkx import reconstruct_path
-from sympy import linear_eq_to_matrix
+from sympy import beta, linear_eq_to_matrix
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
@@ -277,11 +277,11 @@ def load_model(load_path, input_dim) -> NeuralNet:
 # TODO: How to tune these hyper-parameters to improve your model's performance?
 config = {
     'n_epochs': 3000,                
-    'batch_size': 128,               
+    'batch_size': 64,
     'optimizer': 'SGD',              
     'optim_hparas': {                
         'lr': 0.001,
-        'momentum': 0.9
+        'momentum': 0.10
     },
     'early_stop': 200,
     'save_path': 'models/model.pth',
