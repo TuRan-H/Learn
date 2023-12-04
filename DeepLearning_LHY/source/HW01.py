@@ -1,4 +1,5 @@
 from ast import Module
+from sched import scheduler
 from networkx import reconstruct_path
 from sympy import beta, linear_eq_to_matrix
 import torch
@@ -70,9 +71,9 @@ class COVID19Dataset(Dataset):
             self.data = torch.tensor(data[indices], dtype=torch.float32)
             self.target = torch.tensor(target[indices], dtype=torch.float32)
 
-        # **************************************************normalization
+        # **************************************************添加feature normalization
         self.data[:, 40:] = (self.data[:, 40:] - self.data[:, 40:].mean(dim=0, keepdim=True)) / self.data[:, 40:].std(dim=0, keepdim=True)
-        # **************************************************normalization
+        # **************************************************添加feature normalization
 
         self.dim = self.data.shape[1]
         print('Finished reading the {} set of COVID19 Dataset ({} samples found, each dim = {})'
@@ -122,8 +123,11 @@ class NeuralNet(nn.Module):
         # TODO 修改网络的隐藏层, 以达到更好地效果
         self.net = nn.Sequential(
             nn.Linear(input_dim, 64),
+            # **************************************************添加Batch Normalization
+            nn.BatchNorm1d(64),
+            # **************************************************添加Batch Normalization
             nn.ReLU(),
-            nn.Linear(64, 1),
+            nn.Linear(64, 1)
         )
         self.criterion = nn.MSELoss(reduction='mean')
 
@@ -139,8 +143,8 @@ class NeuralNet(nn.Module):
         """
         计算输出的loss
         """
-        # TODO 实现L1/ L2 范数正规化
         loss = self.criterion(prediction, target)
+
 
         return loss
 
@@ -184,7 +188,11 @@ def train(train_dataloader:COVID19Dataset, dev_dataloader:COVID19Dataset, model:
     n_epochs = config['n_epochs']
     early_stop = config['early_stop']
     save_path = config['save_path']
-    optimizer:torch.optim.SGD = getattr(torch.optim, config['optimizer'])(model.parameters(), **config['optim_hparas'])
+    # **************************************************修改优化器, 添加regularization
+    # optimizer:torch.optim.SGD = getattr(torch.optim, config['optimizer'])(model.parameters(), **config['optim_hparas'])
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
+    # **************************************************修改优化器, 添加regularization
+
     loss_record = {'train':[], 'dev':[]}
     model.to(device)
 
@@ -216,6 +224,8 @@ def train(train_dataloader:COVID19Dataset, dev_dataloader:COVID19Dataset, model:
         epoch += 1
 
         if early_stop_cnt > early_stop:
+            # for i in model.parameters():
+            #     print(i.grad)
             break
 
     print('Finished training after {} epochs'.format(epoch))
@@ -274,19 +284,21 @@ def load_model(load_path, input_dim) -> NeuralNet:
     return model
 
 
-# TODO: How to tune these hyper-parameters to improve your model's performance?
 config = {
     'n_epochs': 3000,                
-    'batch_size': 64,
+    'batch_size': 128,
     'optimizer': 'SGD',              
     'optim_hparas': {                
         'lr': 0.001,
-        'momentum': 0.10
+        'momentum': 0.5
     },
-    'early_stop': 200,
+    'early_stop': 1000,
     'save_path': 'models/model.pth',
-    'output_path': 'output/model_result/result.csv'
 }
+# **************************************************修改hyparameter
+config['batch_size'] = 64
+config['output_path'] = 'output/model_result/result.csv'
+# **************************************************修改hyparameter
 
 device = set_device()
 os.makedirs('models', exist_ok=True)
