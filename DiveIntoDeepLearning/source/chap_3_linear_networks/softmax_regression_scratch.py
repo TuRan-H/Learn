@@ -1,5 +1,5 @@
 """
-softmax回归从零实现
+动手实现softmax回归从零
 """
 import torch
 import torchvision
@@ -16,7 +16,7 @@ class SoftmaxNetwork:
 		params
 		---
 		features: 输入向量有多少个feature
-		cls: 最终分类的时候有多少个类别
+		cls: 最终分类的时候有多少个class
 		"""
 		self.weight = torch.normal(0, 1, (features, cls), requires_grad=True)
 		self.bias = torch.zeros(cls, requires_grad=True)
@@ -39,7 +39,7 @@ class SoftmaxNetwork:
 		
 		return output
 	
-	def softmax(self, x):
+	def softmax(self, x:torch.Tensor):
 		"""
 		softmax层, 接收的输入是 全连接层的输出
 
@@ -56,7 +56,7 @@ class SoftmaxNetwork:
 
 		return x_exp / partition
 	
-	def __call__(self, x):
+	def __call__(self, x:torch.Tensor):
 		y = self.affine(x)
 		y = self.softmax(y)
 
@@ -125,7 +125,12 @@ def get_fashion_mnist_dataloader(batch_size, resize=None):
 
 def get_fashion_mnist_labels(labels):
 	"""
-	根据给出的数字labels, 获取真是的labels
+	根据给出的labels, 获取真实的labels
+
+	note
+	---
+	输入labels是一个列表, 列表中的每一个元素都是int类型, 表示一个类别号
+	比如说labels[0] = 1, 那么就说明第0号样本的标签为trouser
 
 	params
 	---
@@ -135,7 +140,6 @@ def get_fashion_mnist_labels(labels):
 				   'sandal', 'shirt', 'sneaker', 'bag', 'ankle boot']
 	
 	return [text_labels[int(i)] for i in labels]
-
 
 def get_fashion_mnist_dev_dataloader():
 	"""
