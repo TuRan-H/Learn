@@ -23,8 +23,8 @@ def load_fashion_mnist_dataloader(batch_size, resize:torch.Size=None, num_worker
 	trans = transforms.Compose(trans)
 	minist_train = torchvision.datasets.FashionMNIST(root="data", train=True, transform=trans, download=True)
 	minist_test = torchvision.datasets.FashionMNIST(root="data", train=False, transform=trans, download=True)
-	return (data.DataLoader(minist_train, batch_size, num_workers=num_workers, shuffle=True), 
-			data.DataLoader(minist_test, batch_size, num_workers=num_workers, shuffle=False))
+	return (data.DataLoader(minist_train, batch_size, num_workers=num_workers, shuffle=True, drop_last=True), 
+			data.DataLoader(minist_test, batch_size, num_workers=num_workers, shuffle=False, drop_last=True))
 
 if __name__=="__main__":
 	pass

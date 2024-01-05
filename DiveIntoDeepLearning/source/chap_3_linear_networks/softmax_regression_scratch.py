@@ -88,15 +88,15 @@ def CrossEntrypyLoss(y_hat:torch.Tensor, y:torch.Tensor):
 	params
 	---
 	y_hat: 模型的预测, shape=(样本的数量, 样本的特征数)
-	y: 真是的标签, shape=(样本的数量), 其中y中的每一项都是一个int类型, 表示该样本属于哪一类
+	y: 真实的标签, shape=(样本的数量), 其中y中的每一项都是一个int类型, 表示该样本属于哪一类
 
 	return
 	---
-	返回一个向量, shape=(样本的数量), 其中每一个元素都代表一个样本的交叉熵的结果
+	返回一个张量, 这个张量是一个向量求sum的结果 (向量, shape=(样本的数量), 其中每一个元素都代表一个样本的交叉熵的结果)
 	"""
 	y_hat = y_hat[list(range(len(y_hat))), y]
-
 	return -y_hat.log()
+
 
 
 def get_fashion_mnist_dataloader(batch_size, resize=None):

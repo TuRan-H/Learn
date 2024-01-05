@@ -2,7 +2,6 @@
 动手实现
 softmax回归简洁版本(使用了pytorch框架的版本)
 """
-# %%
 import os, sys
 os.chdir("/home/turan/LEARN/DiveIntoDeepLearning")
 sys.path.append(os.getcwd())
@@ -12,7 +11,7 @@ from d2l import torch as d2l
 import torchvision
 from torchvision import transforms
 from torch.utils import data
-from scripts.data import load_fashion_mnist_dataloader
+from utils.data import load_fashion_mnist_dataloader
 from matplotlib import pyplot as plt
 
 
