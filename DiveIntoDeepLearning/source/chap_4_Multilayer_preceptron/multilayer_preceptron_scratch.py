@@ -1,64 +1,54 @@
 """
 动手实现 <动手学深度学习> 中的 "多层感知机的从零实现" 
 """
-import os, sys
-sys.path.append(os.getcwd())
+# %%
 import torch
 from torch import nn
 from d2l import torch as d2l
-from utils.data import load_fashion_mnist_dataloader
-from utils.tools import SGD, get_fashion_mnist_labels, CrossEntrypyLoss
+from utils.tools import get_fashion_mnist_labels, evaluate_MLP, show_images
 
 
-input_size, hidden_size, output_size = 784, 256, 10
-w1 = torch.randn(input_size, hidden_size, requires_grad=True)
-w2 = torch.randn(hidden_size, output_size, requires_grad=True)
-b1 = torch.randn(hidden_size, requires_grad=True)
-b2 = torch.randn(output_size, requires_grad=True)
-params = [w1, b1, w2, b2]
-def net(X:torch.Tensor, batch_size):
-	"""
-	模型的前向传播
-	"""
-	try:
-		H = X @ w1 + b1
-	except:
-		X = X.reshape(batch_size, -1)
-		H = X @ w1 + b1
-	O = relu(H @ w2 + b2)
-	return O
-
-def relu(x):
-	"""
-	relu函数
-	"""
-	mask = torch.zeros_like(x)
-	return torch.max(x, mask)
+# %%
+# 获取数据集, 定义超参
+batch_size = 256
+train_iter, test_iter = d2l.load_data_fashion_mnist(batch_size)
+num_epochs = 10
+lr = 0.1
 
 
-if __name__ == "__main__":
-	batch_size = 256
-	epoch_num = 10
-	lr = 1e-1
-	train_iter, test_iter = load_fashion_mnist_dataloader(batch_size)
-	optimizer = SGD(params, lr, batch_size)
-	loss = CrossEntrypyLoss
+# 定义网络, loss函数, 优化器
+num_inputs, num_hiddens, num_outputs = 784, 256, 10
+W1 = nn.Parameter(torch.randn(
+    num_inputs, num_hiddens, requires_grad=True) * 0.01)
+b1 = nn.Parameter(torch.zeros(num_hiddens, requires_grad=True))
+W2 = nn.Parameter(torch.randn(
+    num_hiddens, num_outputs, requires_grad=True) * 0.01)
+b2 = nn.Parameter(torch.zeros(num_outputs, requires_grad=True))
+params = [W1, b1, W2, b2]
 
-	# train
-	for epoch in range(epoch_num):
-		for x, y in train_iter:
-			x = x.reshape(batch_size, -1)
-			y_hat = net(x, batch_size)
-			l = loss(y_hat, y)
-			l.backward()
-			optimizer.step()
-			
-	# evaluation
-	with torch.no_grad():
-		x, y = next(iter(test_iter))
-		x, y = x[:10], y[:10]
-		y_hat = net(x, 10)
-		y_hat = torch.argmax(y_hat, dim=1)
-		pre_label = get_fashion_mnist_labels(y_hat)
-		true_label = get_fashion_mnist_labels(y)
-		print(f"{pre_label}\n{true_label}")
+def relu(X):
+	a = torch.zeros_like(X)
+	return torch.max(X, a)
+
+def net(X):
+	X = X.reshape(-1, num_inputs)
+	H = relu(X @ W1 + b1)
+	return (H @ W2 + b2)
+
+loss = nn.CrossEntropyLoss(reduction='none')
+updater = torch.optim.SGD(params, lr)
+
+
+# train
+for epoch in range(num_epochs):
+	for x, y in train_iter:
+		y_hat = net(x)
+		l = loss(y_hat, y)
+		updater.zero_grad()
+		l.mean().backward()
+		updater.step()
+
+
+# %%
+# evaluate
+evaluate_MLP(net, test_iter, batch_size)

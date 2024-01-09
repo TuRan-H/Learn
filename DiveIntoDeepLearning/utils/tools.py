@@ -1,8 +1,9 @@
 import torch
 import torchvision
 from torch.utils import data
-
-
+from torchvision import transforms
+import random
+from matplotlib import pyplot as plt
 
 
 class SGD:
@@ -30,13 +31,6 @@ class SGD:
 			for param in self.params:
 				param -= self.lr * param.grad / self.batch_size
 				param.grad.zero_()
-
-def get_fashion_mnist_dev_dataloader():
-	"""
-	获取验证集
-	"""
-	dev_set = torchvision.datasets.FashionMNIST(root="data", train=False, transform=transforms.Compose([transforms.ToTensor()]), download=False)
-	return data.DataLoader(dev_set, 10, shuffle=False, num_workers=4)
 
 def get_fashion_mnist_labels(labels):
 	"""
@@ -72,3 +66,65 @@ def CrossEntrypyLoss(y_hat:torch.Tensor, y:torch.Tensor):
 	y_hat = y_hat[list(range(len(y_hat))), y]
 	l = -y_hat.log()
 	return l.sum()
+
+def evaluate_MLP(net, test_iter, batch_size, device=None):
+	"""
+	评估MLP的准确性
+
+	params
+	---
+	net: 神经网络模型, 需要有__call__方法
+	test_iter: 测试数据集的迭代器
+	batch_size: 批量大小
+	device: 使用的device
+	"""
+	index = [random.randint(0, batch_size) for _ in range(10)]
+	with torch.no_grad():
+		x, y = next(iter(test_iter))
+		x, y = x[index], y[index]
+		x_origin = x
+		x = x.reshape(10, -1)
+		if device:
+			x = x.to(device)
+			y = y.to(device)
+			net = net.to(device)
+		y_hat = net(x)
+		y_hat = torch.argmax(y_hat, dim=1)
+		show_images(x_origin, 2, 5, titles=y, titles_pred=y_hat)
+
+def show_images(imgs, num_rows, num_cols, titles=None, titles_pred=None, scale=2):
+	"""
+	显示一系列的图像
+
+	params
+	---
+	imgs: matplotlib支持的图像数据, shape=(H, W, C)
+	num_rows: subplot的行数
+	num_clos: subplot的列数
+	titles: 真实的标签
+	titles_pred: 预测出来的标签
+	scale: figure的大小
+	"""
+	figsize = (num_cols*scale, num_rows*scale)
+	_, axes = plt.subplots(num_rows, num_cols, figsize=figsize)
+	plt.subplots_adjust(wspace=0.5, hspace=0.5)		# 调整子图之间的距离
+	axes = axes.flatten()
+	if titles is not None:  # ! 一个多值的张量不能使用 if title来判定是否为空
+		titles = get_fashion_mnist_labels(titles)
+	if titles_pred is not None:
+		titles_pred = get_fashion_mnist_labels(titles_pred)
+	for i, (ax, img) in enumerate(zip(axes, imgs)):
+		try:
+			ax.imshow(img)
+		except:
+			img = img.numpy()
+			# ! matplotlib接受的图像shape应该是(H, W, C), 而fashion取出来是(C, H, W)
+			img = img.transpose(1, 2, 0)
+			ax.imshow(img)
+		ax.axes.get_xaxis().set_visible(False)
+		ax.axes.get_yaxis().set_visible(False)
+		if titles:
+			ax.set_title(titles[i])
+		if titles_pred:
+			ax.set_title(f"{titles[i]}\n{titles_pred[i]}")
+	return axes

@@ -26,5 +26,9 @@ def load_fashion_mnist_dataloader(batch_size, resize:torch.Size=None, num_worker
 	return (data.DataLoader(minist_train, batch_size, num_workers=num_workers, shuffle=True, drop_last=True), 
 			data.DataLoader(minist_test, batch_size, num_workers=num_workers, shuffle=False, drop_last=True))
 
-if __name__=="__main__":
-	pass
+def load_fashion_mnist_dev_dataloader():
+	"""
+	获取验证集
+	"""
+	dev_set = torchvision.datasets.FashionMNIST(root="data", train=False, transform=transforms.Compose([transforms.ToTensor()]), download=False)
+	return data.DataLoader(dev_set, 10, shuffle=False, num_workers=4)
