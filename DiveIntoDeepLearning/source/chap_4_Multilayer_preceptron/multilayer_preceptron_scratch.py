@@ -1,14 +1,13 @@
 """
 动手实现 <动手学深度学习> 中的 "多层感知机的从零实现" 
 """
-# %%
 import torch
 from torch import nn
 from d2l import torch as d2l
 from utils.tools import get_fashion_mnist_labels, evaluate_MLP, show_images
+import matplotlib.pyplot as plt
 
 
-# %%
 # 获取数据集, 定义超参
 batch_size = 256
 train_iter, test_iter = d2l.load_data_fashion_mnist(batch_size)
@@ -49,6 +48,6 @@ for epoch in range(num_epochs):
 		updater.step()
 
 
-# %%
 # evaluate
-evaluate_MLP(net, test_iter, batch_size)
+evaluate_MLP(net, test_iter, batch_size, show_title=True)
+plt.show()

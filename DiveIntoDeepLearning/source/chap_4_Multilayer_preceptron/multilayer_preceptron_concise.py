@@ -1,7 +1,6 @@
 """
 动手实现:  <动手学深度学习> 多层感知机的简洁实现
 """
-# %%
 import torch
 import torchvision
 from torch import nn
@@ -10,7 +9,6 @@ from utils.data import load_fashion_mnist_dataloader
 from utils.tools import get_fashion_mnist_labels, evaluate_MLP
 
 
-# %%
 # 定义网络
 class MLP(nn.Module):
 	def __init__(self, input_feature, hidden_feature, output_feature):
@@ -37,7 +35,6 @@ class MLP(nn.Module):
 
 	def forward(self, x):
 		return self.net(x)
-
 
 if __name__ == "__main__":
 	# 定义超参数和相关实例
@@ -66,6 +63,5 @@ if __name__ == "__main__":
 			train_loss_list.append(l.sum())
 	
 	
-	# %%
 	# evaluation
 	evaluate_MLP(net, test_iter, batch_size, device=device)

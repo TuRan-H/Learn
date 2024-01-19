@@ -32,6 +32,30 @@ class SGD:
 				param -= self.lr * param.grad / self.batch_size
 				param.grad.zero_()
 
+class Accumulator:
+	"""
+	创建一个列表, 列表中的每一项都能够单独计算和
+	"""
+	def __init__(self, n):
+		"""
+		params:
+		---
+		n: 设置Accumulator的data属性一共有多少项
+		"""
+		self.data = [0.0] * n
+
+	def add(self, *args):
+		"""
+		向Accumulator中添加数据
+		"""
+		self.data = [a + float(b) for a, b in zip(self.data, args)]
+
+	def reset(self):
+		self.data = [0.0] * len(self.data)
+
+	def __getitem__(self, idx):
+		return self.data[idx]
+
 def get_fashion_mnist_labels(labels):
 	"""
 	根据给出的labels, 获取真实的labels
@@ -67,7 +91,7 @@ def CrossEntrypyLoss(y_hat:torch.Tensor, y:torch.Tensor):
 	l = -y_hat.log()
 	return l.sum()
 
-def evaluate_MLP(net, test_iter, batch_size, device=None):
+def evaluate_MLP(net, test_iter, batch_size, device=None, show_title=None):
 	"""
 	评估MLP的准确性
 
@@ -77,6 +101,7 @@ def evaluate_MLP(net, test_iter, batch_size, device=None):
 	test_iter: 测试数据集的迭代器
 	batch_size: 批量大小
 	device: 使用的device
+	show_title: 是否使用文字形式来显示预测值和真值的title
 	"""
 	index = [random.randint(0, batch_size) for _ in range(10)]
 	with torch.no_grad():
@@ -90,6 +115,10 @@ def evaluate_MLP(net, test_iter, batch_size, device=None):
 			net = net.to(device)
 		y_hat = net(x)
 		y_hat = torch.argmax(y_hat, dim=1)
+		if show_title:
+			y_hat_title = get_fashion_mnist_labels(y_hat)
+			y_title = get_fashion_mnist_labels(y)
+			print(f"{y_title}\n{y_hat_title}")
 		show_images(x_origin, 2, 5, titles=y, titles_pred=y_hat)
 
 def show_images(imgs, num_rows, num_cols, titles=None, titles_pred=None, scale=2):
