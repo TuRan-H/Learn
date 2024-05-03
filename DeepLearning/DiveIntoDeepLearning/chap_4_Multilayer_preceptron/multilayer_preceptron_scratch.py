@@ -1,5 +1,7 @@
 """
-动手实现 <动手学深度学习> 中的 "多层感知机的从零实现" 
+<动手学深度学习>
+
+chapter 4.2 多层感知机的简介实现
 """
 import torch
 from torch import nn

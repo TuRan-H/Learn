@@ -95,13 +95,13 @@ def evaluate_MLP(net, test_iter, batch_size, device=None, show_title=None):
 	"""
 	评估MLP的准确性
 
-	params
+	Args:
 	---
-	net: 神经网络模型, 需要有__call__方法
-	test_iter: 测试数据集的迭代器
-	batch_size: 批量大小
-	device: 使用的device
-	show_title: 是否使用文字形式来显示预测值和真值的title
+		net: 神经网络模型, 需要有__call__() / forward()方法
+		test_iter: 测试数据集的迭代器
+		batch_size: 批量大小
+		device: 使用的device
+		show_title: 是否使用文字形式来显示预测值和真值的title
 	"""
 	index = [random.randint(0, batch_size) for _ in range(10)]
 	with torch.no_grad():

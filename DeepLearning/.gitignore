@@ -1,0 +1,10 @@
+**/.vscode
+**/__pycache__
+**/*.pkl
+**/*.pth
+**/.idea
+
+test
+data
+model
+results

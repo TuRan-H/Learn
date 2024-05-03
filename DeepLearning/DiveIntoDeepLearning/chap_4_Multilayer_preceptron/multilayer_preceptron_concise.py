@@ -1,8 +1,9 @@
 """
-动手实现:  <动手学深度学习> 多层感知机的简洁实现
+<动手学深度学习>
+
+chapter 4.2 多层感知机从零开始实现
 """
 import torch
-import torchvision
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
 from utils.data import load_fashion_mnist_dataloader
