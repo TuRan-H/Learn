@@ -38,3 +38,6 @@
 
 * chap_4_Multilayer_preceptron
 <br>多层感知机
+
+# LearnHuggingface
+b站教学视频: 手把手带你实战HuggingFace Transformers联系代码
