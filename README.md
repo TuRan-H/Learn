@@ -1,9 +1,10 @@
-# 简介
-个人学习仓库
+# 学习时所写的练习代码
+
 
 # 目录
-* DAS
-<br>数据结构与算法
-
-* DeepLearning
-<br>深度学习
+```plain text
+|-- Algorithm
+	数据结构与算法
+|-- DeepLearning
+	深度学习
+```
