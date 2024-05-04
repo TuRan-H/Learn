@@ -3,8 +3,12 @@
 **/*.pkl
 **/*.pth
 **/.idea
+**/*.swp
+
 
 data
+dataset
 model
 results
 temp
+lib/transformers-code

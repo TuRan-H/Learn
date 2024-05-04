@@ -1,7 +1,8 @@
-# DeepLearningFromScratch
+# 本仓库包含的深度学习课程
+## DeepLearningFromScratch
 **《深度学习入门, 基于python的理论与实现》** 练习代码
 
-## 目录
+### 目录
 1. ch03_Neural_Network
 <br>神经网络
 
@@ -21,15 +22,15 @@
 <br>深度学习
 
 
-# DiveIntoDeepLearning
+## DiveIntoDeepLearning
 **《动手学深度学习》** 练习代码
 
-## 事先准备
+### 事先准备
 1. 下载 李沐 动手学深度学习 pytorch版本 jupyter notebook 文件<br>将其放置于 `temp` 文件夹中
 
 2. 按照 Dive into deep learning中的教程, 将d2l包安装至当前的环境中
 
-## 目录
+### 目录
 * chap_2_Perliminaries
 <br>预备知识
 
@@ -39,5 +40,12 @@
 * chap_4_Multilayer_preceptron
 <br>多层感知机
 
-# LearnHuggingface
-b站教学视频: 手把手带你实战HuggingFace Transformers联系代码
+## LearnHuggingface
+**b站教学视频: 手把手带你实战HuggingFace Transformers练习代码**
+
+# 目录结构
+* lib
+<br>部分项目的官方代码库
+
+* utils
+<br>工具类代码
