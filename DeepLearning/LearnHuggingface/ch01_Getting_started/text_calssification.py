@@ -18,7 +18,6 @@ b站教学视频: 【手把手带你实战HuggingFace Transformers-入门篇】�
 	4. 对模型进行fine-tune
 	5. 使用微调后的模型, 进行inference, 并compute_metrics
 """
-import sys, os
 import torch
 import pandas as pd
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
