@@ -1,14 +1,13 @@
 # coding: utf-8
-import sys, os
-sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
 import pickle
 import numpy as np
 from collections import OrderedDict
-from common.layers import *
+from utils.common.layers import *
 
 
 class DeepConvNet:
-    """识别率为99%以上的高精度的ConvNet
+    """
+    识别率为99%以上的高精度的ConvNet
 
     网络结构如下所示
         conv - relu - conv- relu - pool -
