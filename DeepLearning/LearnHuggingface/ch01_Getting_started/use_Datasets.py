@@ -9,5 +9,6 @@ b站教学视频: 【手把手带你实战HuggingFace Transformers-入门篇】�
 """
 from datasets import load_dataset
 
+# 使用自定义脚本导入数据集
 dataset = load_dataset(path='LearnHuggingface/ch01_Getting_started/load_script.py', split='train')
 print(dataset)
