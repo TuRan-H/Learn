@@ -1,14 +1,12 @@
 """
-b站教学视频: 【手把手带你实战HuggingFace Transformers-入门篇】基础组件之Datasets
-视频地址: https://www.bilibili.com/video/BV1Ph4y1b76w/?spm_id_from=333.788.top_right_bar_window_history.content.click&vd_source=41721633578b9591ada330add5535721
+b站教学视频: 【手把手带你实战HuggingFace Transformers-入门篇】基础组件之Evaluate
+视频地址: https://www.bilibili.com/video/BV1uk4y1W7tK/?spm_id_from=333.788&vd_source=41721633578b9591ada330add5535721
 
 对文本分类任务代码进行优化
-使用load_dataset来优化数据集的读取
+使用Huggingface的evaluate来进行评估, 简化代码逻辑
 
 """
-from sympy import false
 import torch
-import pandas as pd
 from torch.utils.data import Dataset, DataLoader, random_split
 from torch.optim import Adam
 from transformers import (
@@ -18,6 +16,7 @@ from transformers import (
 	PreTrainedModel,
 	DataCollatorWithPadding
 )
+import evaluate
 from datasets import load_dataset
 from tqdm import tqdm
 from functools import partial
@@ -43,78 +42,77 @@ def load_model(model_name_or_path:str):
 	return tokenizer, model
 
 
-def train(tokenizer:PreTrainedTokenizerFast, model:PreTrainedModel, optimizer:torch.optim.Adam, dataloader:DataLoader, **kwargs):
+def train(model:PreTrainedModel, optimizer:torch.optim.Adam, train_dataloader:DataLoader, valid_dataloader:DataLoader ,total_epoch:int):
 	"""
-	训练函数，用于训练文本分类模型。
+	Trains a text classification model.
 
 	Args:
 	---
-		tokenizer (PreTrainedTokenizerFast): 用于对文本进行分词和编码的tokenizer。
-		model (PreTrainedModel): 文本分类模型。
-		optimizer (torch.optim.Adam): 优化器，用于更新模型的参数。
-		dataloader (DataLoader): 数据加载器，用于对一个batch的数据进行处理。
-		**kwargs: 其他可选参数。
-			epoch: 用于确定epoch次数
-	"""
-	# 将model放到GPU上
-	device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-	model = model.to(device)
-	epoch = kwargs.pop('epoch')
-	global_step = 0
-
-	# 将模型调整至训练模式
-	model.train()
-	for ep in range(epoch):
-		bar = tqdm(total=len(dataloader), desc=f"epoch = {ep+1}")
-		for input in dataloader:
-			# 将input放到GPU上
-			input = {k:v.to(device) for k, v in input.items()}
-			# 将input送给model, 计算prediciotns, 如果input中存在 `labels`字段,  model会自动计算其loss
-			output = model(**input)
-			# 反向传播
-			output.loss.backward()
-			# 梯度更新
-			optimizer.step()
-			# 在每一个batch的梯度更新结束后, 置零梯度, 防止梯度累计
-			optimizer.zero_grad()
-			global_step += 1
-
-			if global_step % 100 == 0:
-				print(f"loss is {output['loss']} ,global step is {global_step}")
-
-			bar.update(1)
-
-
-
-def evaluate(tokenizer:PreTrainedTokenizerFast, model:PreTrainedModel, dataloader:DataLoader):
-	"""
-	Evaluate the performance of a text classification model on a given dataset.
-
-	Args:
-	---
-		tokenizer (PreTrainedTokenizerFast): The tokenizer used to preprocess the input data.
-		model (PreTrainedModel): The text classification model to evaluate.
-		dataloader (DataLoader): The data loader that provides the evaluation dataset.
+		model (PreTrainedModel): The text classification model.
+		optimizer (torch.optim.Adam): The optimizer used to update the model's parameters.
+		train_dataloader (DataLoader): The data loader for training data, used to process a batch of training data.
+		valid_dataloader (DataLoader): The data loader for validation data, used to process a batch of validation data.
+		total_epoch (int): The total number of training epochs.
 
 	Returns:
 	---
-		float: The accuracy of the model on the evaluation dataset.
+		None
 	"""
+	# Move the model to GPU if available
 	device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-	acc_num = 0
-	model.to(device)
-	model.eval()
-	print("start evaluate")
-	with torch.inference_mode():
-		for input in tqdm(dataloader):
+	model = model.to(device)
+
+	# Set the model to training mode
+	model.train()
+	for epoch in range(total_epoch):
+		bar = tqdm(total=len(train_dataloader), desc=f"epoch = {epoch+1}")
+		for input in train_dataloader:
+			# Move input to GPU
 			input = {k:v.to(device) for k, v in input.items()}
+			# 将输入传递给模型，计算预测结果
+			# 如果输入包含`labels`字段，模型将自动计算损失
 			output = model(**input)
-			# output['logits']是一个 (batch_size , num_class) 的tensor
-			predictions = torch.argmax(output['logits'], dim=-1)
-			
-			# 计算准确率
-			acc_num += (predictions.long() == input['labels'].long()).float().sum()
-	return acc_num / len(dataloader.dataset)
+			# Backpropagation
+			output.loss.backward()
+			# Gradient update
+			optimizer.step()
+			# 在每个batch训练结束后, 置零梯度, 防止梯度累计
+			optimizer.zero_grad()
+
+			bar.update(1)
+		# 每个epoch结束后计算metrics, 并输出
+		print(compute_metrics(model, valid_dataloader))
+
+
+
+def compute_metrics(model:PreTrainedModel, dataloader:DataLoader):
+	"""
+	评估函数, 用来计算模型在验证集上的得分
+
+	Args:
+	---
+		model: 训练的模型
+		dataloader: 用来进行验证的验证集dataloader
+	
+	Returns:
+	---
+		输出模型在验证集上的metrics
+	"""
+	device = model.device
+	# 导入评价指标
+	metrics = evaluate.combine(['accuracy', 'f1'])
+
+	# 给定验证集中所有数据, 计算metrics
+	for batch in dataloader:
+		input = {k:v.to(device) for k, v in batch.items()}
+		output = model(**input)
+		prediction = torch.argmax(output.logits, dim=1).reshape([-1])
+
+		metrics.add_batch(references=input['labels'].long(), predictions=prediction.long())
+
+	metrics_result = metrics.compute()
+
+	return metrics_result
 
 
 if __name__ == '__main__':
@@ -131,20 +129,22 @@ if __name__ == '__main__':
 	dataset = dataset.train_test_split(test_size=0.1)
 	# 过滤数据, lamda函数的作用是接受一个样本, 假设这个样本中存在review字段则返回True, 否则返回False
 	dataset = dataset.filter(lambda x: x['review'] is not None)
-	# 映射数据
+	# 映射数据, 对数据进行分词
 	process_function = partial(process_example, tokenizer=tokenizer)
 	dataset = dataset.map(process_function, batched=True, batch_size=1024, remove_columns=dataset['train'].column_names)
 
 	train_dataset, valid_dataset = dataset['train'], dataset['test']
 
+	# 创建dataloader
 	train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True, collate_fn=DataCollatorWithPadding(tokenizer))
 	valid_dataloader = DataLoader(valid_dataset, batch_size=128, shuffle=False, collate_fn=DataCollatorWithPadding(tokenizer))
 
 	# 开始训练
-	train(tokenizer, model, optimizer, train_dataloader, epoch=3)
+	train(model, optimizer, train_dataloader, valid_dataloader, 3)
 
 	# 开始评估, 计算评价指标
-	metrics = evaluate(tokenizer, model, valid_dataloader)
+	metrics = compute_metrics(model, valid_dataloader)
+
 
 	# play-ground
 	idtolabel = {
@@ -153,7 +153,7 @@ if __name__ == '__main__':
 	}
 
 	model.to('cpu')
-	input = "优的酒店"
+	input = "很好的酒店"
 	input = tokenizer(input, return_tensors='pt')
 	output = model(**input)
 	prediction = idtolabel[torch.argmax(output['logits'], dim=-1).item()]
