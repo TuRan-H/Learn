@@ -42,23 +42,3 @@
 
 ## LearnHuggingface
 **b站教学视频: 手把手带你实战HuggingFace Transformers练习代码**
-
-# 目录结构
-```
-.
-|-- DeepLearningFromScratch
-	深度学习入门
-|-- DiveIntoDeepLearning
-	动手学深度学习
-|-- LearnHuggingface
-	手把手带你实战HuggingFace Transformers
-|-- dataset
-	数据集
-|-- lib
-	库函数, 以及相关官方repo
-|-- model
-	模型存放地址
-|-- temp
-|-- utils
-	工具代码
-```
