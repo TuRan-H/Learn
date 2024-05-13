@@ -10,13 +10,16 @@
 使用的backbone: https://huggingface.co/hfl/chinese-macbert-base
 使用的metrics: https://huggingface.co/spaces/evaluate-metric/seqeval
 """
+import torch
+import numpy as np
+import json
+import os
 import evaluate
 from functools import partial
 from datasets import DatasetDict, load_dataset
 from transformers import AutoModelForTokenClassification, AutoTokenizer, PreTrainedTokenizer
 from transformers.trainer import Trainer, TrainingArguments
 from transformers.data.data_collator import DataCollatorForTokenClassification
-import numpy as np
 
 
 
@@ -98,16 +101,19 @@ def compute_metrics(model_predictions, id2label:list, metrics:str):
 
 
 if __name__ == "__main__":
+	os.environ['NCCL_P2P_DISABLE'] = "1"
+	os.environ['NCCL_IB_DISABLE'] = "1"
+
 	# * 导入数据集
-	# dataset = DatasetDict.load_from_disk("./dataset/peoples_daily_ner")
-	dataset = load_dataset('peoples_daily_ner')
+	dataset = load_dataset('./dataset/peoples_daily_ner')
+	# dataset = load_dataset('peoples_daily_ner')
 	id2label = dataset['train'].features['ner_tags'].feature.names
 
 
 	# * 导入model和tokenizer
 	# model = AutoModelForTokenClassification.from_pretrained('./model/chinese-macbert-base', num_labels=)
-	model = AutoModelForTokenClassification.from_pretrained('./model/chinese-macbert-base', num_labels=len(id2label))
-	tokenizer = AutoTokenizer.from_pretrained('./model/chinese-macbert-base')
+	model = AutoModelForTokenClassification.from_pretrained('hfl/chinese-macbert-base', num_labels=len(id2label))
+	tokenizer = AutoTokenizer.from_pretrained('hfl/chinese-macbert-base')
 
 	# * 对数据集进行预处理
 	# ! dataset.map()不是原地方法, 必须要使用一个变量接受它
@@ -121,13 +127,15 @@ if __name__ == "__main__":
 		per_device_eval_batch_size=64,
 		logging_strategy='steps',
 		logging_steps=100,
-		evaluation_strategy="epoch",
-		save_strategy="epoch",
 		num_train_epochs=2,
 		output_dir="./results/token_classification",
+		save_strategy="epoch",
+		evaluation_strategy="epoch",
 		load_best_model_at_end=True,
+		report_to=[]
 	)
 
+	os.makedirs("./results/token_classification", exist_ok=True)
 	trainer = Trainer(
 		model = model,
 		tokenizer=tokenizer,
@@ -135,9 +143,11 @@ if __name__ == "__main__":
 		data_collator=DataCollatorForTokenClassification(tokenizer=tokenizer),		# ! 这里不能传递一个类, 这里需要传递一个类的实例
 		train_dataset=train_dataset,
 		eval_dataset=eval_dataset,
-		compute_metrics=partial(compute_metrics, id2label=id2label, metrics="seqeval")
+		compute_metrics=partial(compute_metrics, id2label=id2label, metrics="./LearnHuggingface/ch02_NLP_Tasks/seqeval_metric.py")
 	)
 
 	trainer.train()
 
-	trainer.evaluate()
+	evaluate_result = trainer.evaluate()
+	with open("./results/token_classification/evaluate_result", 'w') as fp:
+		json.dump(evaluate_result, fp)

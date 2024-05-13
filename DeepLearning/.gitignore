@@ -1,4 +1,13 @@
-**/.vscode
+/.vscode
+/data
+/dataset
+/model
+/results
+/temp
+/lib
+/wandb
+
+
 **/__pycache__
 **/*.pkl
 **/*.pth
@@ -6,9 +15,3 @@
 **/*.swp
 
 
-data
-dataset
-model
-results
-temp
-lib/transformers-code
