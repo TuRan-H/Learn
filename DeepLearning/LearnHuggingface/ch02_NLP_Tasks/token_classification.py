@@ -12,7 +12,7 @@
 """
 import evaluate
 from functools import partial
-from datasets import DatasetDict
+from datasets import DatasetDict, load_dataset
 from transformers import AutoModelForTokenClassification, AutoTokenizer, PreTrainedTokenizer
 from transformers.trainer import Trainer, TrainingArguments
 from transformers.data.data_collator import DataCollatorForTokenClassification
@@ -99,7 +99,8 @@ def compute_metrics(model_predictions, id2label:list, metrics:str):
 
 if __name__ == "__main__":
 	# * 导入数据集
-	dataset = DatasetDict.load_from_disk("./dataset/peoples_daily_ner")
+	# dataset = DatasetDict.load_from_disk("./dataset/peoples_daily_ner")
+	dataset = load_dataset('peoples_daily_ner')
 	id2label = dataset['train'].features['ner_tags'].feature.names
 
 
@@ -125,7 +126,6 @@ if __name__ == "__main__":
 		num_train_epochs=2,
 		output_dir="./results/token_classification",
 		load_best_model_at_end=True,
-		metric_for_best_model="f1"
 	)
 
 	trainer = Trainer(
