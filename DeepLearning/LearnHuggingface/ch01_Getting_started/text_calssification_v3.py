@@ -70,7 +70,6 @@ def compute_metrics(
 		返回一个字典, 该字典含有模型计算出的评价指标
 	"""
 	prediction, label = model_prediction.predictions, model_prediction.label_ids
-	# acc, f1 = acc_metrics, f1_metrics
 	prediction = np.argmax(prediction, axis=-1)
 	acc = acc_metrics.compute(predictions=prediction, references=label)
 	f1 = f1_metrics.compute(predictions=prediction, references=label)
