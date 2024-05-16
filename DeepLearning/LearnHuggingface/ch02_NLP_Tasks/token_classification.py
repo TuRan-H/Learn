@@ -47,7 +47,7 @@ def process_function(examples, tokenizer:PreTrainedTokenizer):
 
 	tokenized_examples = tokenizer(examples['tokens'], max_length=128, truncation=True, is_split_into_words=True)
 
-	# 一个batch中所有元素的label所组成的列表
+	# labels: 一个batch中所有元素的label所组成的列表
 	labels = []
 	for i, label in enumerate(examples['ner_tags']):
 		temp = []
@@ -80,18 +80,22 @@ def compute_metrics(model_predictions, id2label:list, metrics:str):
 	---
 		评价指标
 	"""
+	# 从huggingface或者本地导入metrics
 	metrics = evaluate.load(metrics)
+
+	# 取出模型的预测值和标签值, 并对模型的预测值进行处理
 	predictions, labels = model_predictions.predictions, model_predictions.label_ids
 	predictions = np.argmax(predictions, axis=-1)
 
+	# 对模型的预测值和标签值进行映射
 	true_predictions = []
 	true_labels = []
 	for prediction, label in zip(predictions, labels):
 		true_predictions.append([id2label[p] for p, l in zip(prediction, label) if l != -100])
 		true_labels.append([id2label[l] for p, l in zip(prediction, label) if l != -100])
 
-	metrics.add_batch(references=true_labels, predictions=true_predictions)
-	result = metrics.compute(mode="strict", scheme="IOB2")
+	# 计算metrics
+	result = metrics.compute(references=true_labels, predictions=true_predictions, mode="strict", scheme="IOB2")
 
 	return result
 
@@ -112,16 +116,16 @@ if __name__ == "__main__":
 
 	# * 导入model和tokenizer
 	# model = AutoModelForTokenClassification.from_pretrained('./model/chinese-macbert-base', num_labels=)
-	model = AutoModelForTokenClassification.from_pretrained('hfl/chinese-macbert-base', num_labels=len(id2label))
-	tokenizer = AutoTokenizer.from_pretrained('hfl/chinese-macbert-base')
+	model = AutoModelForTokenClassification.from_pretrained('./model/chinese-macbert-base', num_labels=len(id2label))
+	tokenizer = AutoTokenizer.from_pretrained('./model/chinese-macbert-base')
 
 	# * 对数据集进行预处理
 	# ! dataset.map()不是原地方法, 必须要使用一个变量接受它
 	dataset = dataset.map(partial(process_function, tokenizer=tokenizer), batch_size=64, batched=True)
 
-
 	train_dataset, eval_dataset = dataset['train'], dataset['test']
 
+	# * 创建TrainingArguments
 	args = TrainingArguments(
 		per_device_train_batch_size=32,
 		per_device_eval_batch_size=64,
@@ -136,18 +140,22 @@ if __name__ == "__main__":
 	)
 
 	os.makedirs("./results/token_classification", exist_ok=True)
+	
+	# * 创建训练器
 	trainer = Trainer(
 		model = model,
 		tokenizer=tokenizer,
 		args=args,
-		data_collator=DataCollatorForTokenClassification(tokenizer=tokenizer),		# ! 这里不能传递一个类, 这里需要传递一个类的实例
+		data_collator=DataCollatorForTokenClassification(tokenizer=tokenizer),		# ! data_collator参数不能传递一个类, 这里需要传递一个类的实例
 		train_dataset=train_dataset,
 		eval_dataset=eval_dataset,
 		compute_metrics=partial(compute_metrics, id2label=id2label, metrics="./LearnHuggingface/ch02_NLP_Tasks/seqeval_metric.py")
 	)
 
+	# * 开始训练
 	trainer.train()
 
+	# * 开始评估, 并保存评估结果
 	evaluate_result = trainer.evaluate()
-	with open("./results/token_classification/evaluate_result", 'w') as fp:
+	with open("./results/token_classification/evaluate_result.json", 'w') as fp:
 		json.dump(evaluate_result, fp)

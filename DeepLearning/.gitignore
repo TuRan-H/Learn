@@ -8,6 +8,7 @@
 /wandb
 
 
+**/data
 **/__pycache__
 **/*.pkl
 **/*.pth
