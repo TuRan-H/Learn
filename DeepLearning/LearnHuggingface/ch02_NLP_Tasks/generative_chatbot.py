@@ -7,13 +7,11 @@
 使用的backbone model: Langboat/bloom-389m-zh
 使用的数据集: alpaca_data_zh
 """
-# %%
 from cProfile import label
 import os, sys
 os.chdir("/home/turan/LEARN/DeepLearning")
 sys.path.append("/home/turan/LEARN/DeepLearning")
 
-# %%
 from functools import partial
 from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizerFast, DataCollatorForSeq2Seq
 from datasets import load_dataset, Dataset
@@ -47,12 +45,10 @@ def process_function(example, tokenizer:PreTrainedTokenizerFast):
 
 
 
-# %%
 if __name__ == "__main__":
 	# 导入数据集
 	dataset = Dataset.load_from_disk("./dataset/alpaca_data_zh")
 
-	# %%
 	# 导入模型和分词器
 	model = AutoModelForCausalLM.from_pretrained("./model/bloom-389m-zh")
 	tokenizer = AutoTokenizer.from_pretrained("./model/bloom-389m-zh")
@@ -60,7 +56,6 @@ if __name__ == "__main__":
 	# remove_cloums: 进行map后自动删除某些字段
 	dataset = dataset.map(partial(process_function, tokenizer=tokenizer), remove_columns=dataset.column_names)
 
-	# %%
 	# 定义TrainingArgument和Trainer
 	training_args = TrainingArguments(
 		output_dir="./results/chatbot",
