@@ -7,11 +7,7 @@
 使用的backbone model: Langboat/bloom-389m-zh
 使用的数据集: alpaca_data_zh
 """
-from cProfile import label
 import os, sys
-os.chdir("/home/turan/LEARN/DeepLearning")
-sys.path.append("/home/turan/LEARN/DeepLearning")
-
 from functools import partial
 from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizerFast, DataCollatorForSeq2Seq
 from datasets import load_dataset, Dataset
