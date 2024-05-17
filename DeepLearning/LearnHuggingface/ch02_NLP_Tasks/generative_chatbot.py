@@ -46,8 +46,8 @@ if __name__ == "__main__":
 	dataset = Dataset.load_from_disk("./dataset/alpaca_data_zh")
 
 	# 导入模型和分词器
-	model = AutoModelForCausalLM.from_pretrained("./model/bloom-389m-zh")
-	tokenizer = AutoTokenizer.from_pretrained("./model/bloom-389m-zh")
+	model = AutoModelForCausalLM.from_pretrained("Langboat/bloom-389m-zh")
+	tokenizer = AutoTokenizer.from_pretrained("Langboat/bloom-389m-zh")
 	
 	# remove_cloums: 进行map后自动删除某些字段
 	dataset = dataset.map(partial(process_function, tokenizer=tokenizer), remove_columns=dataset.column_names)
@@ -55,14 +55,16 @@ if __name__ == "__main__":
 	# 定义TrainingArgument和Trainer
 	training_args = TrainingArguments(
 		output_dir="./results/chatbot",
-		per_device_train_batch_size=8,
-		gradient_accumulation_steps=4,
+		per_device_train_batch_size=16,
+		gradient_accumulation_steps=2,
 		logging_steps=100,
-		num_train_epochs=2
+		num_train_epochs=2,
+		save_strategy="epoch"
 	)
 
 	trainer = Trainer(
 		model=model,
+		args=training_args,
 		train_dataset=dataset,
 		data_collator=DataCollatorForSeq2Seq(tokenizer=tokenizer)
 	)
