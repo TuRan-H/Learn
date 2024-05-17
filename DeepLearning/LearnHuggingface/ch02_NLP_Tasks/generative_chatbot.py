@@ -70,3 +70,11 @@ if __name__ == "__main__":
 	)
 	
 	trainer.train()
+
+	# 进行推理
+	from transformers import pipeline
+	inputs = "Human: {}\n{}".format("怎样才能够在考试时获取好成绩", "").strip() + "\n\nAssistant: "
+	pipe = pipeline('text-generation', model=model, tokenizer=tokenizer, device=0)
+	result = pipe(inputs, max_length=256, do_sample=True)
+	print(result[0]['generated_text'])
+	
