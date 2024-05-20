@@ -1,7 +1,7 @@
 """
 b站教学视频: 【手把手带你实战HuggingFace Transformers-入门篇】基础组件之trainer
 
-对文本分类任务代码进行优化
+对文本分类任务代码进行优化:
 使用transformers提供的trainer类简化训练流程
 	- 使用了trainer类后, 不需要手动构建dataloader
 	- 使用了trainer类后, 不需要自己写train函数

@@ -1,41 +1,72 @@
 """
-b站教学视频: 【手把手带你实战HuggingFace Transformers-入门篇】基础组件之Datasets
-视频地址: https://www.bilibili.com/video/BV1Ph4y1b76w/?spm_id_from=333.788.top_right_bar_window_history.content.click&vd_source=41721633578b9591ada330add5535721
+b站教学视频: 【手把手带你实战HuggingFace Transformers-分布式训练篇】分布式数据并行原理与应用
 
-对文本分类任务代码进行优化: 使用load_dataset来优化数据集的读取
+代码流程: 
+	1. 使用pytorch框架对预训练的语言模型进行微调, 实现文本的情感分类任务
+	2. 使用Distributed data parallel进行分布式训练
 
+backbone: https://huggingface.co/hfl/rbt3
+corpus: https://github.com/SophonPlus/ChineseNlpCorpus/blob/master/datasets/ChnSentiCorp_htl_all/ChnSentiCorp_htl_all.csv
 """
-from sympy import false
 import torch
 import pandas as pd
 from torch.utils.data import Dataset, DataLoader, random_split
-from torch.optim import Adam
 from transformers import (
-	AutoTokenizer, 
-	AutoModelForSequenceClassification,
+	AutoTokenizer,
 	PreTrainedTokenizerFast,
 	PreTrainedModel,
-	DataCollatorWithPadding
+	AutoModelForSequenceClassification
 )
-from datasets import load_dataset
+from torch.optim import Adam
 from tqdm import tqdm
-from functools import partial
+
+class MyDataset(Dataset):
+	def __init__(self, dataset_path: str = None) -> None:
+		"""
+		This class represents a custom dataset for text classification.
+		Args:
+		---
+			dataset_path (str): The path to the dataset file.
+		"""
+		super().__init__()
+		self.data = pd.read_csv(dataset_path)
+		self.data = self.data.dropna()
+
+	def __getitem__(self, index):
+		return self.data.iloc[index]['review'], self.data.iloc[index]['label']
+
+	def __len__(self):
+		return len(self.data)
 
 
-def process_example(examples, tokenizer:PreTrainedTokenizerFast):
-	"""
-	用于dataset.map(), 对数据集中的所有元素进行处理
-	"""
-	tokenized_examples = tokenizer(examples["review"], max_length=128, truncation=True)
-	tokenized_examples['label'] = examples['label']
+class MyDataCollator:
+	def __init__(self, tokenizer:PreTrainedTokenizerFast) -> None:
+		"""
+		DataCollator，用于处理原始数据批次并生成模型输入。
 
-	return tokenized_examples
+		Args:
+		---
+			tokenizer (PreTrainedTokenizerFase): 预训练的分词器
+		"""
+		self.tokenizer = tokenizer
+	
+	def __call__(self, batch):
+		"""
+		获取模型一个batch的输入, 将这个输入进行处理
+
+		Args:
+		---
+			batch: 一个batch的输入数据
+		"""
+		tokenizer = self.tokenizer
+		instances, labels = zip(*batch)
+		inputs = tokenizer(instances, max_length=128, padding='max_length', truncation=True, return_tensors='pt')
+		inputs['labels'] = torch.tensor(labels)
+
+		return inputs
 
 
 def load_model(model_name_or_path:str):
-	"""
-	导入模型和tokenizer
-	"""
 	tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
 	model = AutoModelForSequenceClassification.from_pretrained(model_name_or_path)
 
@@ -82,6 +113,8 @@ def train(tokenizer:PreTrainedTokenizerFast, model:PreTrainedModel, optimizer:to
 				print(f"loss is {output['loss']} ,global step is {global_step}")
 
 			bar.update(1)
+		
+
 
 
 
@@ -111,9 +144,11 @@ def evaluate(tokenizer:PreTrainedTokenizerFast, model:PreTrainedModel, dataloade
 			# output['logits']是一个 (batch_size , num_class) 的tensor
 			predictions = torch.argmax(output['logits'], dim=-1)
 			
-			# 计算准确率
 			acc_num += (predictions.long() == input['labels'].long()).float().sum()
 	return acc_num / len(dataloader.dataset)
+
+
+
 
 
 if __name__ == '__main__':
@@ -123,21 +158,16 @@ if __name__ == '__main__':
 	# 导入优化器
 	optimizer = Adam(model.parameters(), lr=2e-5)
 
-	# 读取数据
-	dataset = load_dataset(path='csv', data_files="dataset/ChnSentiCorp_htl_all.csv", split='train')
 	# 划分数据集
-	# train_test_split()函数返回的是一个DatasetDict, 这个Dict中分别有train和test字段
-	dataset = dataset.train_test_split(test_size=0.1)
-	# 过滤数据, lamda函数的作用是接受一个样本, 假设这个样本中存在review字段则返回True, 否则返回False
-	dataset = dataset.filter(lambda x: x['review'] is not None)
-	# 映射数据
-	process_function = partial(process_example, tokenizer=tokenizer)
-	dataset = dataset.map(process_function, batched=True, batch_size=1024, remove_columns=dataset['train'].column_names)
+	all_dataset = MyDataset("dataset/ChnSentiCorp_htl_all.csv")
+	train_dataset, valid_dataset = random_split(all_dataset, [0.8, 0.2])
 
-	train_dataset, valid_dataset = dataset['train'], dataset['test']
+	# 实例化DataCollator
+	datacollator = MyDataCollator(tokenizer)
 
-	train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True, collate_fn=DataCollatorWithPadding(tokenizer))
-	valid_dataloader = DataLoader(valid_dataset, batch_size=128, shuffle=False, collate_fn=DataCollatorWithPadding(tokenizer))
+	train_dataloader = DataLoader(train_dataset, batch_size=32, collate_fn=datacollator, shuffle=True)
+	valid_dataloader = DataLoader(valid_dataset, batch_size=64, collate_fn=datacollator)
+
 
 	# 开始训练
 	train(tokenizer, model, optimizer, train_dataloader, epoch=3)
@@ -152,7 +182,7 @@ if __name__ == '__main__':
 	}
 
 	model.to('cpu')
-	input = "优的酒店"
+	input = "很好的酒店"
 	input = tokenizer(input, return_tensors='pt')
 	output = model(**input)
 	prediction = idtolabel[torch.argmax(output['logits'], dim=-1).item()]

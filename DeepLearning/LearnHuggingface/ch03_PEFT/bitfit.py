@@ -10,14 +10,12 @@
 backbone: Langboat/bloom-1b4-zh
 corpus: alpaca_data_zh
 """
-# %%
 from functools import partial
 from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer, DataCollatorForSeq2Seq, Trainer, TrainingArguments
 from datasets import load_dataset, Dataset
 from LearnHuggingface.ch02_NLP_Tasks.generative_chatbot import process_function
 
 
-# %%
 if __name__ == "__main__":
 	# 导入模型和分词器
 	model = AutoModelForCausalLM.from_pretrained('./model/bloom-1b4-zh')
@@ -27,7 +25,7 @@ if __name__ == "__main__":
 	dataset = Dataset.load_from_disk('./dataset/alpaca_data_zh')
 	dataset = dataset.map(partial(process_function, tokenizer=tokenizer), remove_columns=dataset.column_names)
 
-	# %%
+
 	# bitfit 冻结模型中的参数
 	num_param = 0
 	for name, param in model.named_parameters():
@@ -36,7 +34,7 @@ if __name__ == "__main__":
 		else:
 			num_param += param.numel()
 
-	# %%
+
 	# 实例化trainer
 	training_args = TrainingArguments(
 		output_dir="./results/chatbot",
@@ -55,11 +53,11 @@ if __name__ == "__main__":
 		args=training_args
 	)
 
-	# %%
+
 	# 开始训练
 	trainer.train()
 
-	# %%
+
 	# inference
 	inputs = "Human: {}\n{}".format("怎样才能够在考试时获取好成绩", "").strip() + "\n\nAssistant: "
 	pipe = pipeline('text-gereration', model=model, tokenizer=tokenizer, device='0')

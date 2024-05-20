@@ -2,8 +2,7 @@
 b站教学视频: 【手把手带你实战HuggingFace Transformers-入门篇】基础组件之Evaluate
 视频地址: https://www.bilibili.com/video/BV1uk4y1W7tK/?spm_id_from=333.788&vd_source=41721633578b9591ada330add5535721
 
-对文本分类任务代码进行优化
-使用Huggingface的evaluate来进行评估, 简化代码逻辑
+对文本分类任务代码进行优化: 使用Huggingface的evaluate来进行评估, 简化代码逻辑
 
 """
 import torch
