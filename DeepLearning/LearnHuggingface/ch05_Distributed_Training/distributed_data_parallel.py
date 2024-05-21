@@ -7,18 +7,23 @@ b站教学视频: 【手把手带你实战HuggingFace Transformers-分布式训�
 
 backbone: https://huggingface.co/hfl/rbt3
 corpus: https://github.com/SophonPlus/ChineseNlpCorpus/blob/master/datasets/ChnSentiCorp_htl_all/ChnSentiCorp_htl_all.csv
+
+注意: 本篇代码需要使用 `torchrun` 来运行
 """
-import torch
+import os
 import pandas as pd
-from torch.utils.data import Dataset, DataLoader, random_split
+import torch
+import torch.distributed as distributed
+from torch.nn.parallel import DistributedDataParallel
+from torch.optim import Adam
+from torch.utils.data import Dataset, DataLoader, random_split, DistributedSampler
+from tqdm import tqdm
 from transformers import (
 	AutoTokenizer,
 	PreTrainedTokenizerFast,
 	PreTrainedModel,
 	AutoModelForSequenceClassification
 )
-from torch.optim import Adam
-from tqdm import tqdm
 
 class MyDataset(Dataset):
 	def __init__(self, dataset_path: str = None) -> None:
@@ -87,18 +92,16 @@ def train(tokenizer:PreTrainedTokenizerFast, model:PreTrainedModel, optimizer:to
 			epoch: 用于确定epoch次数
 	"""
 	# 将model放到GPU上
-	device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-	model = model.to(device)
 	epoch = kwargs.pop('epoch')
 	global_step = 0
 
 	# 将模型调整至训练模式
 	model.train()
 	for ep in range(epoch):
-		bar = tqdm(total=len(dataloader), desc=f"epoch = {ep+1}")
+		bar = tqdm(total=len(dataloader), desc=f"rank = {os.environ['LOCAL_RANK']}, epoch = {ep+1}")
 		for input in dataloader:
 			# 将input放到GPU上
-			input = {k:v.to(device) for k, v in input.items()}
+			input = {k:v.to(int(os.environ['LOCAL_RANK'])) for k, v in input.items()}
 			# 将input送给model, 计算prediciotns, 如果input中存在 `labels`字段,  model会自动计算其loss
 			output = model(**input)
 			# 反向传播
@@ -110,7 +113,7 @@ def train(tokenizer:PreTrainedTokenizerFast, model:PreTrainedModel, optimizer:to
 			global_step += 1
 
 			if global_step % 100 == 0:
-				print(f"loss is {output['loss']} ,global step is {global_step}")
+				print(f"loss is {output['loss']}, global step is {global_step}")
 
 			bar.update(1)
 		
@@ -132,28 +135,34 @@ def evaluate(tokenizer:PreTrainedTokenizerFast, model:PreTrainedModel, dataloade
 	---
 		float: The accuracy of the model on the evaluation dataset.
 	"""
-	device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 	acc_num = 0
-	model.to(device)
 	model.eval()
 	print("start evaluate")
 	with torch.inference_mode():
 		for input in tqdm(dataloader):
-			input = {k:v.to(device) for k, v in input.items()}
+			input = {k:v.to(int(os.environ['LOCAL_RANK'])) for k, v in input.items()}
 			output = model(**input)
 			# output['logits']是一个 (batch_size , num_class) 的tensor
 			predictions = torch.argmax(output['logits'], dim=-1)
 			
-			acc_num += (predictions.long() == input['labels'].long()).float().sum()
-	return acc_num / len(dataloader.dataset)
+			acc_num += int((predictions.long() == input['labels'].long()).float().sum())
+	return int(acc_num) / len(dataloader.dataset)
 
 
 
 
 
 if __name__ == '__main__':
+	# * 设置distributed的后端
+	distributed.init_process_group(backend="nccl")
+
 	# 导入模型和分词器
 	tokenizer, model = load_model("model/rbt3")
+
+	# * 使用DDP包装模型
+	# ! 注意, 现将模型导入到某张卡后, 再去包装模型
+	model.to(int(os.environ['LOCAL_RANK']))
+	model = DistributedDataParallel(model)
 
 	# 导入优化器
 	optimizer = Adam(model.parameters(), lr=2e-5)
@@ -165,25 +174,15 @@ if __name__ == '__main__':
 	# 实例化DataCollator
 	datacollator = MyDataCollator(tokenizer)
 
-	train_dataloader = DataLoader(train_dataset, batch_size=32, collate_fn=datacollator, shuffle=True)
-	valid_dataloader = DataLoader(valid_dataset, batch_size=64, collate_fn=datacollator)
-
+	# * 修改DataLoader的sampler为DistributedSampler, 使得不同的进程能够获取
+	train_dataloader = DataLoader(train_dataset, batch_size=32, collate_fn=datacollator, sampler=DistributedSampler(train_dataset))
+	valid_dataloader = DataLoader(valid_dataset, batch_size=64, collate_fn=datacollator, sampler=DistributedSampler(valid_dataset))
 
 	# 开始训练
 	train(tokenizer, model, optimizer, train_dataloader, epoch=3)
 
 	# 开始评估, 计算评价指标
 	metrics = evaluate(tokenizer, model, valid_dataloader)
+	print(metrics)
 
-	# play-ground
-	idtolabel = {
-		0: "不好",
-		1: "好"
-	}
-
-	model.to('cpu')
-	input = "很好的酒店"
-	input = tokenizer(input, return_tensors='pt')
-	output = model(**input)
-	prediction = idtolabel[torch.argmax(output['logits'], dim=-1).item()]
-	print(prediction)
+	print("hello world")

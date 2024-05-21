@@ -176,7 +176,7 @@ if __name__ == '__main__':
 	datacollator = MyDataCollator(tokenizer)
 
 	train_dataloader = DataLoader(train_dataset, batch_size=32, collate_fn=datacollator, shuffle=True)
-	valid_dataloader = DataLoader(valid_dataset, batch_size=64, collate_fn=datacollator)
+	valid_dataloader = DataLoader(valid_dataset, batch_size=64, collate_fn=datacollator, shuffle=True)
 
 
 	# 开始训练
