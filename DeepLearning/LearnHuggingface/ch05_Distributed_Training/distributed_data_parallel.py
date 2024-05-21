@@ -98,6 +98,9 @@ def train(tokenizer:PreTrainedTokenizerFast, model:PreTrainedModel, optimizer:to
 	# 将模型调整至训练模式
 	model.train()
 	for ep in range(epoch):
+		# * 对dataloader设置了generator之后, 每一个epoch都会sample同样的数据
+		# * 这里需要进行特殊处理, 使得每一个epoch sample不同的数据
+		dataloader.sampler.set_epoch(ep)
 		bar = tqdm(total=len(dataloader), desc=f"rank = {os.environ['LOCAL_RANK']}, epoch = {ep+1}")
 		for input in dataloader:
 			# 将input放到GPU上
@@ -105,7 +108,8 @@ def train(tokenizer:PreTrainedTokenizerFast, model:PreTrainedModel, optimizer:to
 			# 将input送给model, 计算prediciotns, 如果input中存在 `labels`字段,  model会自动计算其loss
 			output = model(**input)
 			# 反向传播
-			output.loss.backward()
+			loss = output['loss']
+			loss.backward()
 			# 梯度更新
 			optimizer.step()
 			# 在每一个batch的梯度更新结束后, 置零梯度, 防止梯度累计
@@ -113,6 +117,8 @@ def train(tokenizer:PreTrainedTokenizerFast, model:PreTrainedModel, optimizer:to
 			global_step += 1
 
 			if global_step % 100 == 0:
+				# * 因为每一个进程所接触的数据不同, 因此loss不同, 这里将每个进程的loss求和取平均
+				distributed.all_reduce(tensor=loss, op=distributed.ReduceOp.AVG)
 				print(f"loss is {output['loss']}, global step is {global_step}")
 
 			bar.update(1)
@@ -135,8 +141,8 @@ def evaluate(tokenizer:PreTrainedTokenizerFast, model:PreTrainedModel, dataloade
 	---
 		float: The accuracy of the model on the evaluation dataset.
 	"""
-	acc_num = 0
-	model.eval()
+	acc_num = torch.tensor(0.0).to(int(os.environ['LOCAL_RANK']))
+	total_count = torch.tensor(0.0).to(int(os.environ['LOCAL_RANK']))
 	print("start evaluate")
 	with torch.inference_mode():
 		for input in tqdm(dataloader):
@@ -144,9 +150,16 @@ def evaluate(tokenizer:PreTrainedTokenizerFast, model:PreTrainedModel, dataloade
 			output = model(**input)
 			# output['logits']是一个 (batch_size , num_class) 的tensor
 			predictions = torch.argmax(output['logits'], dim=-1)
-			
-			acc_num += int((predictions.long() == input['labels'].long()).float().sum())
-	return int(acc_num) / len(dataloader.dataset)
+			acc_num += (predictions.long() == input['labels']).long().float().sum()
+			total_count += input['labels'].size(0)
+
+	# * 因为数据集被分块给每一个进程了, 因此每个进程求解出来的acc_num只有一部分
+	# * 在这里要对不同进程的acc_num和total_count求和
+	distributed.all_reduce(acc_num)
+	distributed.all_reduce(total_count)
+
+	accuracy = acc_num / total_count
+	return accuracy.item()
 
 
 
@@ -160,7 +173,7 @@ if __name__ == '__main__':
 	tokenizer, model = load_model("model/rbt3")
 
 	# * 使用DDP包装模型
-	# ! 注意, 现将模型导入到某张卡后, 再去包装模型
+	# ! 注意, 先将模型导入到某张卡后, 再去包装模型
 	model.to(int(os.environ['LOCAL_RANK']))
 	model = DistributedDataParallel(model)
 
@@ -168,8 +181,9 @@ if __name__ == '__main__':
 	optimizer = Adam(model.parameters(), lr=2e-5)
 
 	# 划分数据集
-	all_dataset = MyDataset("dataset/ChnSentiCorp_htl_all.csv")
-	train_dataset, valid_dataset = random_split(all_dataset, [0.8, 0.2])
+	all_dataset = MyDataset("./dataset/ChnSentiCorp_htl_all/ChnSentiCorp_htl_all.csv")
+	# * 由于每个进程之间的数据划分不一样, 可能会导致数据泄露问题, 这里将每个进程按照一致的方式划分
+	train_dataset, valid_dataset = random_split(all_dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
 
 	# 实例化DataCollator
 	datacollator = MyDataCollator(tokenizer)
@@ -184,5 +198,3 @@ if __name__ == '__main__':
 	# 开始评估, 计算评价指标
 	metrics = evaluate(tokenizer, model, valid_dataloader)
 	print(metrics)
-
-	print("hello world")

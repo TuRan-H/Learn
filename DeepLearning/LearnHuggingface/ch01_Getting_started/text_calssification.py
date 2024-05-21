@@ -168,7 +168,7 @@ if __name__ == '__main__':
 	optimizer = Adam(model.parameters(), lr=2e-5)
 
 	# 划分数据集
-	all_dataset = MyDataset("dataset/ChnSentiCorp_htl_all.csv")
+	all_dataset = MyDataset("./dataset/ChnSentiCorp_htl_all/ChnSentiCorp_htl_all.csv")
 	train_dataset, valid_dataset = random_split(all_dataset, [0.8, 0.2])
 
 	# 实例化DataCollator
@@ -183,6 +183,7 @@ if __name__ == '__main__':
 
 	# 开始评估, 计算评价指标
 	metrics = evaluate(tokenizer, model, valid_dataloader)
+	print(metrics)
 
 	# play-ground
 	idtolabel = {

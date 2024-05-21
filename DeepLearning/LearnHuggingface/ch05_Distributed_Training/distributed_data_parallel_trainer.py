@@ -1,14 +1,17 @@
 """
-b站教学视频: 【手把手带你实战HuggingFace Transformers-入门篇】基础组件之trainer
+b站教学视频: 【手把手带你实战HuggingFace Transformers-分布式训练篇】分布式数据并行原理与应用
 
-对文本分类任务代码进行优化:
-使用transformers提供的trainer类简化训练流程
-	- 使用了trainer类后, 不需要手动构建dataloader
-	- 使用了trainer类后, 不需要自己写train函数
+代码流程: 
+	1. 使用transformers框架对预训练的语言模型进行微调, 使其能够进行情感分类任务
+	2. 使用Distributed data parallel配合transformers.trainer.Trainer进行分布式训练
+
+backbone: https://huggingface.co/hfl/rbt3
+corpus: https://github.com/SophonPlus/ChineseNlpCorpus/blob/master/datasets/ChnSentiCorp_htl_all/ChnSentiCorp_htl_all.csv
+
+注意: 本篇代码需要使用 `torchrun` 来运行
 """
 import os, sys
 import numpy as np
-from torch.utils.data import Dataset, DataLoader, random_split
 import evaluate
 import json
 import transformers
@@ -23,8 +26,6 @@ from transformers import (
 )
 from datasets import load_dataset
 from functools import partial
-
-print(os.environ['TOKENIZERS_PARALLELISM'])
 
 
 def process_example(examples, tokenizer:PreTrainedTokenizerFast):
@@ -89,9 +90,9 @@ if __name__ == '__main__':
 	optimizer = Adam(model.parameters(), lr=2e-5)
 	# 读取数据
 	dataset = load_dataset(path='csv', data_files="./dataset/ChnSentiCorp_htl_all/ChnSentiCorp_htl_all.csv", split='train')
-	# 划分数据集
-	# train_test_split()函数返回的是一个DatasetDict, 这个Dict中分别有train和test字段
-	dataset = dataset.train_test_split(test_size=0.1)
+	# 划分数据集, train_test_split()函数返回的是一个DatasetDict, 这个Dict中分别有train和test字段
+	# * 这里使用seed参数修改数据集的划分方式, 避免数据泄露
+	dataset = dataset.train_test_split(test_size=0.1, seed=42)
 	# 过滤数据, lamda函数的作用是接受一个样本, 假设这个样本中存在review字段则返回True, 否则返回False
 	dataset = dataset.filter(lambda x: x['review'] is not None)
 	# 映射数据, 对数据进行分词
@@ -122,7 +123,7 @@ if __name__ == '__main__':
 		data_collator=DataCollatorWithPadding(tokenizer),
 		train_dataset=train_dataset,
 		eval_dataset=valid_dataset,
-		compute_metrics=compute_metrics,
+		compute_metrics=compute_metrics
 	)
 
 	# 模型开始训练
