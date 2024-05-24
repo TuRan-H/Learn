@@ -6,6 +6,7 @@
 /temp
 /lib
 /wandb
+/download
 
 
 **/__pycache__
