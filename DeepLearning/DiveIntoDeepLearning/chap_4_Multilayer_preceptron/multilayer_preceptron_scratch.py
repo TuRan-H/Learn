@@ -1,31 +1,16 @@
 """
-<动手学深度学习>
-
-chapter 4.2 多层感知机的简介实现
+动手学深度学习
+多层感知机的简洁实现
 """
 import torch
-from torch import nn
-from d2l import torch as d2l
-from utils.tools import get_fashion_mnist_labels, evaluate_MLP, show_images
 import matplotlib.pyplot as plt
+from torch import nn
+from utils.data.mnist import load_data_fashion_mnist
+from DiveIntoDeepLearning.chap_4_Multilayer_preceptron.MLP_utils import evaluate_MLP
+from tqdm import tqdm
 
 
-# 获取数据集, 定义超参
-batch_size = 256
-train_iter, test_iter = d2l.load_data_fashion_mnist(batch_size)
-num_epochs = 10
-lr = 0.1
 
-
-# 定义网络, loss函数, 优化器
-num_inputs, num_hiddens, num_outputs = 784, 256, 10
-W1 = nn.Parameter(torch.randn(
-    num_inputs, num_hiddens, requires_grad=True) * 0.01)
-b1 = nn.Parameter(torch.zeros(num_hiddens, requires_grad=True))
-W2 = nn.Parameter(torch.randn(
-    num_hiddens, num_outputs, requires_grad=True) * 0.01)
-b2 = nn.Parameter(torch.zeros(num_outputs, requires_grad=True))
-params = [W1, b1, W2, b2]
 
 def relu(X):
 	a = torch.zeros_like(X)
@@ -36,20 +21,41 @@ def net(X):
 	H = relu(X @ W1 + b1)
 	return (H @ W2 + b2)
 
-loss = nn.CrossEntropyLoss(reduction='none')
-updater = torch.optim.SGD(params, lr)
 
 
-# train
-for epoch in range(num_epochs):
-	for x, y in train_iter:
-		y_hat = net(x)
-		l = loss(y_hat, y)
-		updater.zero_grad()
-		l.mean().backward()
-		updater.step()
 
+if __name__ == "__main__":
+	# 定义超参
+	batch_size = 256
+	num_epochs = 10
+	lr = 0.1
 
-# evaluate
-evaluate_MLP(net, test_iter, batch_size, show_title=True)
-plt.show()
+	# 导入数据
+	train_loader, test_loader = load_data_fashion_mnist(batch_size)
+
+	# 定义网络, loss函数, 优化器
+	num_inputs, num_hiddens, num_outputs = 784, 256, 10
+	W1 = nn.Parameter(torch.randn(
+		num_inputs, num_hiddens, requires_grad=True) * 0.01)
+	b1 = nn.Parameter(torch.zeros(num_hiddens, requires_grad=True))
+	W2 = nn.Parameter(torch.randn(
+		num_hiddens, num_outputs, requires_grad=True) * 0.01)
+	b2 = nn.Parameter(torch.zeros(num_outputs, requires_grad=True))
+	params = [W1, b1, W2, b2]
+
+	loss = nn.CrossEntropyLoss(reduction='none')
+	updater = torch.optim.SGD(params, lr)
+
+	# train
+	for epoch in range(num_epochs):
+		bar = tqdm(train_loader, desc=f"training epoch {epoch} / {num_epochs}")
+		for x, y in train_loader:
+			y_hat = net(x)
+			l = loss(y_hat, y)
+			updater.zero_grad()
+			l.mean().backward()
+			updater.step()
+			bar.update()
+
+	# evaluate
+	evaluate_MLP(net, test_loader, batch_size, show_title=True)

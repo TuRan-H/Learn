@@ -7,8 +7,7 @@ import torch
 import torch.nn as nn
 from d2l import torch as d2l
 from torch.utils import data
-from utils.download_data.mnist import load_fashion_mnist_dataloader
-from utils.download_data.mnist.mnist import download_mnist
+from utils.data.mnist import load_data_fashion_mnist
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
@@ -68,7 +67,7 @@ if __name__ == "__main__":
 	loss = nn.CrossEntropyLoss(reduction="none")
 	net = SoftmaxNetwork(784, 10)
 	optimizer = torch.optim.SGD(net.parameters(), learning_rate)
-	train_loader, test_loader = load_fashion_mnist_dataloader(batch_size)
+	train_loader, test_loader = load_data_fashion_mnist(batch_size)
 
 	for epoch in tqdm(range(epoch_num)):
 		for x, y in train_loader:

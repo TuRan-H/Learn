@@ -9,7 +9,7 @@ from torch.utils import data
 from torchvision import transforms
 from matplotlib import pyplot as plt
 from tqdm import tqdm
-from utils.download_data.mnist import load_fashion_mnist_dataloader
+from utils.data.mnist import load_data_fashion_mnist
 
 
 d2l.use_svg_display()
@@ -152,7 +152,7 @@ if __name__ == "__main__":
 	batch_size = 256
 
 	# 定义对应的实例
-	train_dataloader, test_dataloader = load_fashion_mnist_dataloader(batch_size)
+	train_dataloader, test_dataloader = load_data_fashion_mnist(batch_size)
 	dev_dataloader = test_dataloader
 	net = SoftmaxNetwork( input_features,output_features)
 	optimizer = SGD((net.weight, net.bias), learn_rate, batch_size)

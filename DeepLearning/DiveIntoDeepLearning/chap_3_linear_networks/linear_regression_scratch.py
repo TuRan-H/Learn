@@ -3,11 +3,9 @@
 线性回归的从零实现
 """
 import random
-from turtle import forward
 import torch
-from d2l import torch as d2l
 
-def synthetic_data(w:torch.Tensor, b:torch.Tensor, num_examples:int) -> tuple(torch.Tensor, torch.Tensor):
+def synthetic_data(w:torch.Tensor, b:torch.Tensor, num_examples:int):
 	"""
 	人工创建数据集
 

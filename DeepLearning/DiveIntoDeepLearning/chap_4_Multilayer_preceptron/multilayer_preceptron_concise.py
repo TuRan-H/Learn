@@ -1,13 +1,16 @@
 """
 <动手学深度学习>
 
-chapter 4.2 多层感知机从零开始实现
+多层感知机从零开始实现
 """
 import torch
+import random
 from torch import nn
-from torch.utils.data import Dataset, DataLoader
-from utils.data import load_fashion_mnist_dataloader
-from utils.tools import get_fashion_mnist_labels, evaluate_MLP
+from utils.data.mnist import load_data_fashion_mnist
+from tqdm import tqdm
+from matplotlib import pyplot as plt
+from DiveIntoDeepLearning.chap_4_Multilayer_preceptron.MLP_utils import evaluate_MLP
+
 
 
 # 定义网络
@@ -19,17 +22,17 @@ class MLP(nn.Module):
 			nn.ReLU(),
 			nn.Linear(hidden_feature, output_feature, bias=True)
 		)
-		self.net.apply(self.init_weight)		# ! 使用net.apply来将init_weight函数按顺序应用到nn.Sequential每一层中
+		# *** 使用net.apply来将init_weight函数按顺序应用到nn.Sequential每一层中
+		self.net.apply(self.init_weight)		
 
 	@staticmethod
 	def init_weight(m):
 		"""
 		初始化方法, 随后会应用在net.apply函数中
-		! 网络的初始化一定不能够忘记
 
-		params
+		Args:
 		---
-		m: nn.sequential中的某一层
+			m: nn.sequential中的某一层
 		"""
 		if type(m) == nn.Linear:
 			nn.init.normal_(m.weight, std=0.01)		# * 使用 nn.init.normal_()函数来正态分布初始化一个网络的weight
@@ -37,32 +40,39 @@ class MLP(nn.Module):
 	def forward(self, x):
 		return self.net(x)
 
+
+
+
 if __name__ == "__main__":
-	# 定义超参数和相关实例
+	# 定义超参数
 	device = torch.device('cuda:0')
 	learning_rate = 1e-1
 	batch_size = 256
 	num_epoch = 10
-	net = MLP(784, 256, 10)		# 定义网络
-	net = net.to(device)
-	optimizer = torch.optim.SGD(net.parameters(), learning_rate)		# 定义优化器
-	train_iter, test_iter = load_fashion_mnist_dataloader(batch_size, num_workers=4)		# 获取训练集和测试集
-	loss = nn.CrossEntropyLoss(reduction="mean")		# 定义loss函数
+
+	# 实例化对应类
+	model = MLP(784, 256, 10)
+	model = model.to(device)
+	optimizer = torch.optim.SGD(model.parameters(), learning_rate)
+	train_loader, test_loader = load_data_fashion_mnist(batch_size, num_workers=4)
+	loss = nn.CrossEntropyLoss(reduction="mean")
 	train_loss_list = []
 	
-	# train
-	net.train()
+	# 训练
+	model.train()
 	for epoch in range(num_epoch):
-		for x, y in train_iter:
+		bar = tqdm(train_loader, desc=f"training epoch {epoch} / {num_epoch}")
+		for x, y in train_loader:
 			x = x.reshape(batch_size, -1).to(device)
 			y = y.to(device)
-			y_hat = net(x)
+			y_hat = model(x)
 			l = loss(y_hat, y)
-			optimizer.zero_grad()	# ! 一定要加上optimizer.zero_grad() 将梯度重置一下, 要不然后面的梯度会进行累积
+			optimizer.zero_grad()
 			l.backward()
 			optimizer.step()
 			train_loss_list.append(l.sum())
-	
+			bar.update(1)
+
 	
 	# evaluation
-	evaluate_MLP(net, test_iter, batch_size, device=device)
+	evaluate_MLP(model, test_loader, batch_size, device=device)
