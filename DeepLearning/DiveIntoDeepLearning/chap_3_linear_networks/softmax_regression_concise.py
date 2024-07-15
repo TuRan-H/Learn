@@ -1,18 +1,16 @@
 """
-动手实现
-softmax回归简洁版本(使用了pytorch框架的版本)
+动手学深度学习V2
+softmax回归的简洁实现
 """
 import os, sys
-os.chdir("/home/turan/LEARN/DiveIntoDeepLearning")
-sys.path.append(os.getcwd())
 import torch
 import torch.nn as nn
 from d2l import torch as d2l
-import torchvision
-from torchvision import transforms
 from torch.utils import data
-from utils.data import load_fashion_mnist_dataloader
+from utils.download_data.mnist import load_fashion_mnist_dataloader
+from utils.download_data.mnist.mnist import download_mnist
 from matplotlib import pyplot as plt
+from tqdm import tqdm
 
 
 class SoftmaxNetwork(nn.Module):
@@ -28,7 +26,7 @@ def init_weights(layer):
 	if isinstance(layer, nn.Linear):
 		nn.init.normal_(layer.weight, std=0.01)
 
-def get_fashion_mnist_labels(labels):
+def id2label(labels):
 	"""
 	根据给出的labels, 获取真实的labels
 
@@ -46,13 +44,12 @@ def get_fashion_mnist_labels(labels):
 	
 	return [text_labels[int(i)] for i in labels]
 
-def see_what_happend(net:SoftmaxNetwork, dev_dataloader:data.DataLoader):
+def plot_visualization(net:SoftmaxNetwork, dev_dataloader:data.DataLoader):
 	x, y = next(iter(dev_dataloader))
 	y_hat = net(x)
-	#
 	y_hat = y_hat.argmax(dim=1)
-	labels_predicted = get_fashion_mnist_labels(y_hat[:10])
-	labels = get_fashion_mnist_labels(y[:10])
+	labels_predicted = id2label(y_hat[:10])
+	labels = id2label(y[:10])
 	print(labels_predicted)
 	print(labels)
 	d2l.show_images(x[0:10].reshape([10, 28, 28]), 5, 2, titles=labels_predicted)
@@ -73,7 +70,7 @@ if __name__ == "__main__":
 	optimizer = torch.optim.SGD(net.parameters(), learning_rate)
 	train_loader, test_loader = load_fashion_mnist_dataloader(batch_size)
 
-	for epoch in range(epoch_num):
+	for epoch in tqdm(range(epoch_num)):
 		for x, y in train_loader:
 			net.train()
 			y_hat = net(x)
@@ -83,10 +80,9 @@ if __name__ == "__main__":
 			* 其次, loss的参数有dtype要求, 两个参数y_hat和y的dtype都必须是torch.long
 			"""
 			y.type(torch.long)
-			l = loss(y_hat, y)		# 计算loss, 正向传播
-			optimizer.zero_grad()	# 清除之前累积的梯度
-			l.mean().backward()		# 现在所有参数的梯度都被清除了, 可以重新反向传播获取梯度了
-			optimizer.step()		# 根据获取的梯度, 进行参数的梯度更新
+			l = loss(y_hat, y)		# 正向传播
+			optimizer.zero_grad()	# 清除optimizer的累计梯度
+			l.mean().backward()		# 反向传播
+			optimizer.step()		# 梯度下降
 	
-	see_what_happend(net, test_loader)
-	
+	plot_visualization(net, test_loader)

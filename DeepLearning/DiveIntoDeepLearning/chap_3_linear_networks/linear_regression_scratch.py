@@ -1,5 +1,6 @@
 """
-动手实现  `动手学深度学习` 中的 从零开始实现线性回归
+动手学深度学习V2
+线性回归的从零实现
 """
 import random
 from turtle import forward
@@ -48,9 +49,6 @@ class data_iter:
 			self.batch_indices.append(batch_indice)
 
 	def __next__(self) -> tuple(torch.Tensor, torch.Tensor):
-		"""
-		实现迭代器借口
-		"""
 		self.count += 1
 		try: 
 			return self.features[self.batch_indices[self.count]], self.labels[self.batch_indices[self.count]]
@@ -60,9 +58,6 @@ class data_iter:
 			raise StopIteration
 
 	def __iter__(self):
-		"""
-		实现可迭代借口
-		"""
 		return self
 
 

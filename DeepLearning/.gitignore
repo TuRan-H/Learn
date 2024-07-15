@@ -1,3 +1,4 @@
+# 文件夹
 /.vscode
 /data
 /dataset
@@ -9,6 +10,7 @@
 /download
 
 
+# 文件pattern
 **/__pycache__
 **/*.pkl
 **/*.pth
@@ -16,3 +18,6 @@
 **/*.swp
 
 
+# 文件
+run.sh
+.env
