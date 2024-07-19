@@ -1,7 +1,7 @@
 """
 <动手学深度学习>
 
-多层感知机从零开始实现
+4.2 多层感知机从零开始实现
 """
 import torch
 import random
@@ -9,7 +9,7 @@ from torch import nn
 from utils.data.mnist import load_data_fashion_mnist
 from tqdm import tqdm
 from matplotlib import pyplot as plt
-from DiveIntoDeepLearning.chap_4_Multilayer_preceptron.MLP_utils import evaluate_MLP
+from DiveIntoDeepLearning.chap_4_Multilayer_preceptron.multilayer_preceptron_utils import evaluate_MLP
 
 
 

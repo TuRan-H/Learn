@@ -1,12 +1,13 @@
 """
-动手学深度学习
-多层感知机的简洁实现
+<动手学深度学习>
+
+4.3 多层感知机的简洁实现
 """
 import torch
 import matplotlib.pyplot as plt
 from torch import nn
 from utils.data.mnist import load_data_fashion_mnist
-from DiveIntoDeepLearning.chap_4_Multilayer_preceptron.MLP_utils import evaluate_MLP
+from DiveIntoDeepLearning.chap_4_Multilayer_preceptron.multilayer_preceptron_utils import evaluate_MLP
 from tqdm import tqdm
 
 
