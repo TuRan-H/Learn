@@ -1,26 +1,8 @@
 import random
 import torch
-import matplotlib.pyplot as plt
 
-
-
-
-def FashionMnist_id2label(labels):
-	"""
-	根据给出的labels, 获取真实的labels
-
-	note
-	---
-	输入labels是一个列表, 列表中的每一个元素都是int类型, 表示一个类别号
-	比如说labels[0] = 1, 那么就说明第0号样本的标签为trouser
-
-	params
-	---
-	labels: 使用数字表示的标签列表
-	"""
-	text_labels = ['t-shirt', 'trouser', 'pullover', 'dress', 'coat',
-				   'sandal', 'shirt', 'sneaker', 'bag', 'ankle boot']
-	return [text_labels[int(i)] for i in labels]
+from matplotlib import pyplot as plt
+from utils.data.mnist import FashionMnist_id2label
 
 
 def evaluate_MLP(net, test_iter, batch_size, device=None, show_title=None):

@@ -5,25 +5,9 @@
 import random
 import torch
 
-def synthetic_data(w:torch.Tensor, b:torch.Tensor, num_examples:int):
-	"""
-	人工创建数据集
-
-	params
-	---
-	w: 权重
-	b: 偏置
-	num_examples: 样本的数量
-
-	return
-	---
-	返回一个元组, 分别是 (人工构建的输入, 根据输入计算出来的真实的输出)
-	公式为 `y = x^T W + b + \epsilon`
-	"""
-	X = torch.normal(0, 1, (num_examples, len(w)))
-	y = torch.matmul(X, w) + b
-	y += torch.normal(0, 0.01, y.shape)
-	return X, y.reshape((-1, 1))
+from utils.data.synthetic_data import synthetic_data
+from utils.net.SGD import SGD
+from utils.net.loss import MSE
 
 
 class data_iter:
@@ -46,7 +30,7 @@ class data_iter:
 			batch_indice = torch.tensor(self.indices[i:min(i + self.batch_size, self.num_examples)])
 			self.batch_indices.append(batch_indice)
 
-	def __next__(self) -> tuple(torch.Tensor, torch.Tensor):
+	def __next__(self):
 		self.count += 1
 		try: 
 			return self.features[self.batch_indices[self.count]], self.labels[self.batch_indices[self.count]]
@@ -86,33 +70,26 @@ class Model:
 		return self.forward(x)
 
 
-class MSE:
-	def __init__(self):
-		self.mean_square_error = lambda y_hat, y: (y_hat - y) ** 2 / 2
-	
-	
-	def __call__(self, y_hat, y) -> torch.Tensor:
-		return self.mean_square_error(y_hat, y)
 
 
-class SGD:
-	def __init__(self, params:torch.Tensor, lr, batch_size):
-		self.params = params
-		self.lr = lr
-		self.batch_size = batch_size
+# class SGD:
+# 	def __init__(self, params:torch.Tensor, lr, batch_size):
+# 		self.params = params
+# 		self.lr = lr
+# 		self.batch_size = batch_size
 	
-	def update(self) -> torch.Tensor:
-		with torch.no_grad():
-			for param in self.params:
-				"""
-				* 由于之前计算loss的时候进行了 l.sum()
-				* \frac{\partial l.sum()}{\partial w}  = \sum_{i}^{n}{(x_iw^T-y)x_i^T} 
-				* 其中, x_i表示输入矩阵X的第几行(输入矩阵中的每一行代表一个单独的输入)
-				* 如果在数学上直接对l求解梯度, 那么得出来的w.grad应该是一个矩阵, 
-				* 但是对l.sum()求解梯度就对这个矩阵进行sum(axis=1)
-				"""
-				param -= self.lr * param.grad / self.batch_size
-				param.grad.zero_()
+# 	def update(self) -> torch.Tensor:
+# 		with torch.no_grad():
+# 			for param in self.params:
+# 				"""
+# 				* 由于之前计算loss的时候进行了 l.sum()
+# 				* \frac{\partial l.sum()}{\partial w}  = \sum_{i}^{n}{(x_iw^T-y)x_i^T} 
+# 				* 其中, x_i表示输入矩阵X的第几行(输入矩阵中的每一行代表一个单独的输入)
+# 				* 如果在数学上直接对l求解梯度, 那么得出来的w.grad应该是一个矩阵, 
+# 				* 但是对l.sum()求解梯度就对这个矩阵进行sum(axis=1)
+# 				"""
+# 				param -= self.lr * param.grad / self.batch_size
+# 				param.grad.zero_()
 
 	
 
@@ -147,7 +124,7 @@ if __name__ == "__main__":
 			* 这里对l求和, 将l压缩成了一个标量, 就可以对其进行反向传播
 			"""
 			l.sum().backward()
-			optimizer.update()
+			optimizer.step()
 		with torch.no_grad():
 			train_l = loss(net(features), labels)
 			print(f'epoch {epoch + 1}, loss {float(train_l.mean()):f}')

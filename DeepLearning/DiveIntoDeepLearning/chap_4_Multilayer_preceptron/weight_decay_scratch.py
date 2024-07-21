@@ -4,13 +4,12 @@
 4.5.2 权重衰减的从零实现
 """
 import torch
+
+from dataclasses import dataclass
 from torch import nn
 from d2l import torch as d2l
-from dataclasses import dataclass
 from matplotlib import pyplot as plt
-from DiveIntoDeepLearning.chap_4_Multilayer_preceptron.weight_decay_utils import Generate_data
-
-
+from utils.data.synthetic_data import Generate_data
 
 
 @dataclass
@@ -25,7 +24,7 @@ class Args:
 		batch_size (int): Batch size for training.
 		num_epochs (int): Number of training epochs.
 		lr (float): Learning rate for the optimizer.
-		lambd (float): Weight decay coefficient.
+		lambd (float): 权值衰减率
 	"""
 	num_train: int = 20
 	num_test: int = 100
@@ -74,11 +73,6 @@ def train(train_loader, test_loader, args:Args):
 	plt.show()
 	print("L2 norm of w:", torch.norm(w).item())
 
-
-
-
-	
-	
 
 
 

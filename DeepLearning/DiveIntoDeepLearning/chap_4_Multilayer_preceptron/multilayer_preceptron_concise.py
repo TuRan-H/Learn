@@ -6,10 +6,10 @@
 import torch
 import random
 from torch import nn
-from utils.data.mnist import load_data_fashion_mnist
 from tqdm import tqdm
 from matplotlib import pyplot as plt
-from DiveIntoDeepLearning.chap_4_Multilayer_preceptron.multilayer_preceptron_utils import evaluate_MLP
+from utils.data.mnist import load_data_fashion_mnist
+from utils.evaluate.evaluate_MLP import evaluate_MLP
 
 
 

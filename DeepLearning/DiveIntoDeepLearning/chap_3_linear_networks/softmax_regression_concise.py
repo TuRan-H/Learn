@@ -5,11 +5,12 @@ softmax回归的简洁实现
 import os, sys
 import torch
 import torch.nn as nn
+
 from d2l import torch as d2l
 from torch.utils import data
-from utils.data.mnist import load_data_fashion_mnist
 from matplotlib import pyplot as plt
 from tqdm import tqdm
+from utils.data.mnist import load_data_fashion_mnist, FashionMnist_id2label
 
 
 class SoftmaxNetwork(nn.Module):
@@ -25,30 +26,13 @@ def init_weights(layer):
 	if isinstance(layer, nn.Linear):
 		nn.init.normal_(layer.weight, std=0.01)
 
-def id2label(labels):
-	"""
-	根据给出的labels, 获取真实的labels
-
-	note
-	---
-	输入labels是一个列表, 列表中的每一个元素都是int类型, 表示一个类别号
-	比如说labels[0] = 1, 那么就说明第0号样本的标签为trouser
-
-	params
-	---
-	labels: 使用数字表示的标签列表
-	"""
-	text_labels = ['t-shirt', 'trouser', 'pullover', 'dress', 'coat',
-				   'sandal', 'shirt', 'sneaker', 'bag', 'ankle boot']
-	
-	return [text_labels[int(i)] for i in labels]
 
 def plot_visualization(net:SoftmaxNetwork, dev_dataloader:data.DataLoader):
 	x, y = next(iter(dev_dataloader))
 	y_hat = net(x)
 	y_hat = y_hat.argmax(dim=1)
-	labels_predicted = id2label(y_hat[:10])
-	labels = id2label(y[:10])
+	labels_predicted = FashionMnist_id2label(y_hat[:10])
+	labels = FashionMnist_id2label(y[:10])
 	print(labels_predicted)
 	print(labels)
 	d2l.show_images(x[0:10].reshape([10, 28, 28]), 5, 2, titles=labels_predicted)

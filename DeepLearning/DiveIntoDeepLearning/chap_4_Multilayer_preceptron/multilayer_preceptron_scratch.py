@@ -7,9 +7,8 @@ import torch
 import matplotlib.pyplot as plt
 from torch import nn
 from utils.data.mnist import load_data_fashion_mnist
-from DiveIntoDeepLearning.chap_4_Multilayer_preceptron.multilayer_preceptron_utils import evaluate_MLP
 from tqdm import tqdm
-
+from utils.evaluate.evaluate_MLP import evaluate_MLP
 
 
 
