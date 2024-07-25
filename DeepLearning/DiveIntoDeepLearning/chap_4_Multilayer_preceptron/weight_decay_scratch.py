@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from torch import nn
 from d2l import torch as d2l
 from matplotlib import pyplot as plt
-from utils.data.synthetic_data import Generate_data
+from utils.data.synthetic_data import generate_data
 
 
 @dataclass
@@ -80,5 +80,5 @@ if __name__ == "__main__":
 	args = Args()
 	args.lambd = 3
 
-	train_loader, test_loader = Generate_data(args)
+	train_loader, test_loader = generate_data(args)
 	train(train_loader, test_loader, args)

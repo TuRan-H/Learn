@@ -4,12 +4,12 @@
 4.5.2 权重衰减的简介实现
 """
 import torch
-
 from dataclasses import dataclass
 from torch import nn, optim
 from d2l import torch as d2l
 from matplotlib import pyplot as plt
-from utils.data.synthetic_data import Generate_data
+from utils.data.synthetic_data import generate_data
+from tqdm import tqdm
 
 
 @dataclass
@@ -51,7 +51,7 @@ def train(train_loader, test_loader, args:Args):
 	animator = d2l.Animator(xlabel='epochs', ylabel='loss', yscale='linear',xlim=[5, args.num_epochs], legend=['train', 'test'])
 	loss = nn.MSELoss(reduction='mean')
 
-	for epoch in range(args.num_epochs):
+	for epoch in tqdm(range(args.num_epochs)):
 		for x, y in train_loader:
 			optimizer.zero_grad()
 			l = loss(net(x), y)
@@ -64,11 +64,9 @@ def train(train_loader, test_loader, args:Args):
 	plt.show()
 
 
-
-
 if __name__ == "__main__":
 	args = Args()
-	args.lambd = 0
 	args.num_epochs = 500
-	train_loader, test_loader = Generate_data(args)
+	args.lambd = 3
+	train_loader, test_loader = generate_data(args)
 	train(train_loader, test_loader, args)

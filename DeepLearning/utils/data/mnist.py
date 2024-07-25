@@ -20,7 +20,7 @@ def load_data_fashion_mnist(batch_size, resize:torch.Size=None, num_workers=4):
 	trans = [transforms.ToTensor()]
 	# 修改图片大小
 	if resize:
-		trans.insert(0, transforms.Resize(resize))
+		trans.insert(0, transforms.Resize(resize)) # type: ignore
 	trans = transforms.Compose(trans)
 	minist_train = torchvision.datasets.FashionMNIST(root="./dataset", train=True, transform=trans, download=True)
 	minist_test = torchvision.datasets.FashionMNIST(root="./dataset", train=False, transform=trans, download=True)

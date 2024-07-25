@@ -23,7 +23,7 @@ def synthetic_data(w:torch.Tensor, b:torch.Tensor, num_examples:int):
 	return X, y.reshape((-1, 1))
 
 
-def Generate_data(args):
+def generate_data(args):
 	"""
 	实现动手学深度学习4.5节 (权重衰减) 中的人工构造数据集
 	---
