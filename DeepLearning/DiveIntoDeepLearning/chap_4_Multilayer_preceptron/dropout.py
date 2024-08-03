@@ -26,9 +26,10 @@ setattr(torch.Tensor, '__repr__', custom_tensor_repr)
 
 @dataclass
 class Args:
+	save_dir:str
 	dropout_rate1:float = 0.2
 	dropout_rate2:float = 0.5
-	num_epochs:int = field(default=10)
+	num_epochs:int = 10
 
 
 class Model:
@@ -37,10 +38,10 @@ class Model:
 			nn.Flatten(),
 			nn.Linear(784, 256),
 			nn.ReLU(),
-			# nn.Dropout(args.dropout_rate1),
+			nn.Dropout(args.dropout_rate1),
 			nn.Linear(256, 256),
 			nn.ReLU(),
-			# nn.Dropout(args.dropout_rate2),
+			nn.Dropout(args.dropout_rate2),
 			nn.Linear(256, 10)
 		)
 		self.net.apply(self.init_weight)
@@ -102,16 +103,20 @@ def train(args:Args):
 	optimizer = torch.optim.SGD(
 		model.net.parameters(), lr=0.5
 	)
-	animator = d2l.Animator(xlabel='epoch', xlim=[1, args.num_epochs], ylim=[0.3, 0.9],legend=['train loss', 'train acc', 'test acc'])
+	animator = d2l.Animator(xlabel='epoch', xlim=[1, args.num_epochs], ylim=[0.3, 1.0],legend=['train loss', 'train acc', 'test acc'])
 	train_loader, test_loader = load_data_fashion_mnist(batch_size=256)
 
-	for epoch in tqdm(range(args.num_epochs), desc="Training", disable=True):
+	for epoch in tqdm(range(args.num_epochs), desc="Training"):
 		train_loss, train_acc = train_epoch(model, train_loader, loss, optimizer)
 		test_acc = test_epoch(model, test_loader)
 		animator.add(epoch+1 , [train_loss, train_acc, test_acc])
-	plt.show()
+	
+	plt.savefig(args.save_dir)
 
 		
 if __name__ == "__main__":
-	args = Args()
+	args = Args(
+		save_dir='./results/dropout_1.svg',
+		num_epochs=20
+	)
 	train(args)
