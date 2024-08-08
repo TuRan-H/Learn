@@ -1,9 +1,8 @@
-import torch
 import torchvision
 from torchvision import transforms
 from torch.utils import data
 
-def load_data_fashion_mnist(batch_size, resize:torch.Size=None, num_workers=4):
+def load_data_fashion_mnist(batch_size:int, resize=None, num_workers=4):
 	"""
 	获取Fashion Mnist数据集的train datalaoder和test dataloader
 
