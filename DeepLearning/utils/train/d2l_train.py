@@ -21,7 +21,7 @@ def train_convolution_network(model:nn.Module, train_loader, test_loader, num_ep
 
 	# 绘图
 	num_batches = len(train_loader)
-	animator = d2l.Animator(xlabel='epoch', xlim=[1, num_epochs], legend=['train_loss', 'test_loss', 'test_acc'])
+	animator = d2l.Animator(xlabel='epoch', xlim=[1, num_epochs], ylim=[0, 1], legend=['train_loss', 'test_loss', 'test_acc'])
 
 	# 确定模型以及数据的位置
 	if not device:
