@@ -10,13 +10,11 @@ import zipfile
 import requests
 import numpy as np
 import pandas as pd
-from sympy import linear_eq_to_matrix
 import torch
 from torch import nn
 from d2l import torch as d2l
 from tqdm import tqdm
 from matplotlib import pyplot as plt
-from torch.optim.lr_scheduler import StepLR
 
 
 # 定义数据集下载连接
