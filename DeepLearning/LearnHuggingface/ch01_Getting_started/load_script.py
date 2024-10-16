@@ -35,7 +35,7 @@ class CMRC2018(datasets.GeneratorBasedBuilder):
 			})
 		)
 	
-	def _split_generators(self, dl_manager: DownloadManager):
+	def _split_generators(self, dl_manager):
 		"""
 		返回一个生成器列表, 每个生成器对应了一个数据集的特定split
 		用于生成数据集不同的划分
