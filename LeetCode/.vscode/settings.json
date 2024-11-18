@@ -1,0 +1,9 @@
+{
+	"github.copilot.enable": {
+		"*": false,
+	},
+	"python.analysis.diagnosticSeverityOverrides": {
+		"reportOptionalMemberAccess": "none",
+		"reportAttributeAccessIssue": "none"
+	}
+}
