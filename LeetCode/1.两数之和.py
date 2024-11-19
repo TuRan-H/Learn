@@ -3,6 +3,7 @@ from python3problem1 import *
 from typing import *
 # @before-stub-for-debug-end
 
+
 #
 # @lc app=leetcode.cn id=1 lang=python3
 #
