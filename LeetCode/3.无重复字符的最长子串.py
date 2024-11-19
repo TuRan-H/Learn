@@ -1,3 +1,10 @@
+"""
+求解思路: 滑动窗口
+
+参考资料: https://www.bilibili.com/video/BV113411v7Ak/?spm_id_from=333.337.search-card.all.click&vd_source=41721633578b9591ada330add5535721
+"""
+
+
 # @before-stub-for-debug-begin
 from python3problem3 import *
 from typing import *
@@ -12,32 +19,23 @@ from typing import *
 # @lc code=start
 class Solution:
 	def lengthOfLongestSubstring(self, s: str) -> int:
-		D = [0] * len(s)
+		length, max_length = 0, 0
+		right, left = 0, 0
+		unique_element = set()
 
-		for i in range(len(s)):
-			if i == 0:
-				D[i] = 1
-			elif s[i] == s[i-1]:
-				D[i] = D[i-1]
-			else:   # s[i] != s[i-1]
-				# find j
-				j = -1
-				for index in range(i-1, -1, -1):
-					if s[index] == s[i]:
-						j = index
-						break
-				
-				# find len(i and j loop back until s[i] != s[j])
-				count = 0
-				if j != -1:
-					i_temp, j_temp = i, j
-					while(s[i_temp] == s[j_temp]):
-						count += 1
-						i_temp -= 1
-						j_temp -= 1
-				
-				D[i] = min(count, D[i-1]+1) if count != 0 else D[i-1]+1
+		while right != len(s):
+			if s[right] not in unique_element:
+				unique_element.add(s[right])
+				right += 1
+			else:
+				unique_element.discard(s[left])
+				left += 1
+			
+			length = len(unique_element)
+			if length > max_length: max_length = length
+		
+		return max_length
 
-		return max(D)
+
 		
 # @lc code=end
