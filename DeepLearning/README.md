@@ -8,11 +8,10 @@
 ```
 .
 ├── dataset: 数据集
-├── DiveIntoDeepLearning: 动手学深度学习练习代码
-├── LearnHuggingface: 手把手带你实战Huggingface Transformers练习代码
 ├── lib: 教学视频/书本的官方代码
 ├── model: 模型
 ├── results: 实验结果
+├── src: 自己手写的练习代码
 ├── temp: 临时文件
 └── utils: 工具代码
 ```
