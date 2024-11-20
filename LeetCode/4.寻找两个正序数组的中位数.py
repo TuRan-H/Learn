@@ -1,6 +1,6 @@
 # @before-stub-for-debug-begin
 from python3problem4 import *
-from typing import *
+from typing import * # type: ignore
 # @before-stub-for-debug-end
 
 
