@@ -1,13 +1,11 @@
 # 文件夹
-/.vscode
-/data
-/dataset
-/model
-/results
-/temp
-/lib
-/wandb
-/download
+.vscode
+dataset
+model
+results
+temp
+lib
+download
 
 
 # 文件pattern
@@ -18,6 +16,6 @@
 **/*.swp
 
 
-# 文件
+# 特定文件
 run.sh
 .env
