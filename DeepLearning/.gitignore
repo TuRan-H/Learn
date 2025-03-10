@@ -1,11 +1,13 @@
 # 文件夹
-.vscode
-dataset
-model
-results
-temp
-lib
-download
+/.vscode
+/dataset
+/data
+/model
+/result
+/results
+/temp
+/lib
+/download
 
 
 # 文件pattern
