@@ -1,6 +1,18 @@
 """
-# 动手实现GPT-2模型
-参考资料: https://www.bilibili.com/video/BV1qWwke5E3K/?spm_id_from=333.1387.homepage.video_card.click&vd_source=41721633578b9591ada330add5535721
+动手实现一个transformer模型, 用于文本生成任务
+
+参考资料: 
+* https://www.bilibili.com/video/BV1qWwke5E3K/?spm_id_from=333.1387.homepage.video_card.click&vd_source=41721633578b9591ada330add5535721
+
+TODO:
+* 实现RoPE(Positional Encoding变种)
+* 实现SwiGLU (FFN中的激活函数变种)
+* 实现RMSNorm (LayerNorm的变种)
+* 实现FlashAttention (Attention的变种)
+* 实现NSA (DeepSeek最新推出的Native Sparse Attention)
+* 实现MLA (Multi Latent Attention)
+* 实现KVCache
+* 实现BEAM search
 """
 import json
 import os
@@ -18,7 +30,7 @@ from tqdm import tqdm
 
 
 @dataclass
-class GPTConfig:
+class TransformerConfig:
 	"""
 	创建配置参数类
 	"""
@@ -34,7 +46,7 @@ class GPTConfig:
 	T_max: int = field(default=1000, metadata={"help": "cosine annealing learning rate scheduler的超参"})
 	device: str = field(default="cuda:0", metadata={"help": "device"})
 	total_epoch: int = field(default=2, metadata={"help": "total epoch"})
-	save_dir: str = field(default="./result/GPT2_from_scratch", metadata={"help": "save model dir"})
+	save_dir: str = field(default="./result/transformer", metadata={"help": "save model dir"})
 	data_dir: str = field(default="./data/mobvoi_seq_monkey_general_open_corpus.jsonl", metadata={"help": "data dir"})
 
 	def __post_init__(self):
@@ -43,7 +55,7 @@ class GPTConfig:
 
 
 class SingleHeadAttention(nn.Module):
-	def __init__(self, config: GPTConfig) -> None:
+	def __init__(self, config: TransformerConfig) -> None:
 		super().__init__()
 		self.head_dim = config.head_dim
 		self.embedding_dim = config.embedding_dim
@@ -90,7 +102,7 @@ class SingleHeadAttention(nn.Module):
 
 
 class MultiHeadAttention(nn.Module):
-	def __init__(self, config: GPTConfig) -> None:
+	def __init__(self, config: TransformerConfig) -> None:
 		super().__init__()
 		self.n_head = config.n_head
 		self.embedding_dim = config.embedding_dim
@@ -113,7 +125,7 @@ class MultiHeadAttention(nn.Module):
 
 
 class FeedForward(nn.Module):
-	def __init__(self, config: GPTConfig) -> None:
+	def __init__(self, config: TransformerConfig) -> None:
 		super().__init__()
 		self.embedding_dim = config.embedding_dim
 		self.dropout_rate = config.dropout_rate
@@ -131,7 +143,7 @@ class FeedForward(nn.Module):
 
 
 class DecoderBlock(nn.Module):
-	def __init__(self, config: GPTConfig) -> None:
+	def __init__(self, config: TransformerConfig) -> None:
 		super().__init__()
 		self.embedding_dim = config.embedding_dim
 		self.mla = MultiHeadAttention(config)
@@ -147,8 +159,8 @@ class DecoderBlock(nn.Module):
 		return X
 
 
-class GPT2(nn.Module):
-	def __init__(self, config: GPTConfig) -> None:
+class Transformer(nn.Module):
+	def __init__(self, config: TransformerConfig) -> None:
 		super().__init__()
 		self.embedding_dim = config.embedding_dim
 		self.vocab_size = config.vocab_size
@@ -164,7 +176,7 @@ class GPT2(nn.Module):
 		# tie weight, 即token_embedding和lm_head的权重共享
 		# 这里lm_head是embedding_dim -> vocab_size的, 因此其weight的shape为(vocab_size, embedding_dim)
 		# 和nn.Embeddging的weight的shape一致
-		self.token_embedding.weight = self.lm_head.weight
+		self.lm_head.weight = self.token_embedding.weight
 		self.loss_function = nn.CrossEntropyLoss()
 
 		self.apply(self._init_weights)
@@ -179,7 +191,7 @@ class GPT2(nn.Module):
 			nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
 
-	def forward(self, X: torch.Tensor, targets: torch.Tensor | None):
+	def forward(self, X: torch.Tensor, targets: torch.Tensor | None = None):
 		"""
 		Args:
 			X: (batch_size, seq_len)
@@ -210,8 +222,33 @@ class GPT2(nn.Module):
 		return logits, loss
 
 
+	def generate(self, inputs: torch.Tensor, max_new_tokens: int):
+		"""
+		Args:
+			# idx: (batch_size, seq_length) 经过tokenizer编码后的输入序列
+			# max_new_tokens: 生成的最大token数量
+		# """
+		for _ in range(max_new_tokens):
+			# 如果序列的长度大于block_size, 则只取最后block_size个token
+			inputs = inputs if inputs.size(1) <= self.block_size else inputs[:, -self.block_size:]
+			
+			# 获取模型输出的logits, logits -> (batch_size, vocab_size)
+			with torch.no_grad():
+				logits, _ = self(inputs)
+				logits = logits[:, -1, :]
+			# 对模型输出的logits进行softmax
+			probs = F.softmax(logits, dim=-1)
+			# 从概率分布中采样下一个token, 这里使用的是多项式采样 (根据指定的概率分布进行采样)
+			next_token = torch.multinomial(probs, num_samples=1)
+			# 附加到原始输入序列的末尾, 作为下一次的输入
+			inputs = torch.cat((inputs, next_token), dim=1)
+		return inputs
+
+
+
+
 class MyDataset(Dataset):
-	def __init__(self, path, config: GPTConfig) -> None:
+	def __init__(self, path, config: TransformerConfig) -> None:
 		self.block_size = config.block_size
 		self.tokenizer = tiktoken.get_encoding('gpt2')
 		self.eos_token = "<|endoftext|>"
@@ -231,13 +268,13 @@ class MyDataset(Dataset):
 			encoded = self.tokenizer.encode(text)
 			full_encoded.extend(encoded + [self.eos_token_id])
 
-		# 将长序列切分为多个block
+		# 将长序列切分为多个block, 作为训练数据
 		self.encoded_data = []
 		bar = tqdm(range(0, len(full_encoded), self.block_size), desc="Encoding data")
 		for i in range(0, len(full_encoded), self.block_size):
 			# 每个block的长度为block_size + 1, [0: block_size]为inputs, [1: block_size + 1]为targets
 			block = full_encoded[i: i + self.block_size + 1]
-			# 使用eos_token_id作为padding
+			# 如果最后一个block的大小不够, 使用eos_token_id作为padding
 			if len(block) < self.block_size + 1:
 				block += [self.eos_token_id] * (self.block_size + 1 - len(block))
 			self.encoded_data.append(block)
@@ -256,8 +293,8 @@ class MyDataset(Dataset):
 		return inputs, targets
 
 
-def train(
-	model: GPT2,
+def train_epoch(
+	model: Transformer,
 	optimizer: torch.optim.Optimizer,
 	scheduler: torch.optim.lr_scheduler.LRScheduler,
 	train_loader: DataLoader,
@@ -286,8 +323,8 @@ def train(
 	return total_loss
 
 
-def eval(
-	model: GPT2,
+def eval_epoch(
+	model: Transformer,
 	val_dataloader: DataLoader,
 	device: str,
 	epoch: int
@@ -307,24 +344,20 @@ def eval(
 	return total_loss
 
 
-if __name__ == '__main__':
-	torch.manual_seed(1024)
-	config = GPTConfig()
-	dataset = MyDataset(config.data_dir, config)
-	train_dataset, val_dataset = torch.utils.data.random_split(dataset, [0.9, 0.1])
-	train_dataloader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
-	val_dataloader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
-	model = GPT2(config)
+def train(
+	config: TransformerConfig,
+	model: Transformer,
+	train_dataloader: DataLoader,
+	val_dataloader: DataLoader,
+):
+	"""
+	训练和保存模型
+	"""
 	optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
 	scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.T_max)
-
 	model = model.to(config.device)
-
-	if not os.path.exists(config.save_dir):
-		os.makedirs(config.save_dir)
-
 	for epoch in range(config.total_epoch):
-		train_loss = train(
+		train_loss = train_epoch(
 			model,
 			optimizer,
 			scheduler,
@@ -333,20 +366,43 @@ if __name__ == '__main__':
 			config.device,
 			epoch
 		)
-		val_loss = eval(
+		val_loss = eval_epoch(
 			model,
 			val_dataloader,
 			config.device,
 			epoch
 		)
 		print(f"Epoch: {epoch}, Train loss: {train_loss / len(train_dataloader)}, Eval loss: {val_loss / len(val_dataloader)}")
-		# 保存模型
-		avg_val_loss = val_loss / len(val_dataloader)
-		checkpoint = {
-			'epoch': epoch,
-			'model_state_dict': model.state_dict(),
-			'optimizer_state_dict': optimizer.state_dict(),
-			'scheduler_state_dict': scheduler.state_dict(),
-			'val_loss': avg_val_loss,
-		}
-		torch.save(checkpoint, f'./result/GPT2_from_scratch/model_epoch_{epoch}.pt')
+
+	# 保存模型
+	if not os.path.exists(config.save_dir):
+		os.makedirs(config.save_dir)
+	checkpoint = {
+		'model_state_dict': model.state_dict(),
+		'optimizer_state_dict': optimizer.state_dict(),
+		'scheduler_state_dict': scheduler.state_dict(),
+	}
+	save_path = os.path.join(config.save_dir, 'transformer.pth')
+	torch.save(checkpoint, save_path)
+
+
+
+if __name__ == '__main__':
+	torch.manual_seed(1024)
+	config = TransformerConfig()
+	dataset = MyDataset(config.data_dir, config)
+	train_dataset, val_dataset = torch.utils.data.random_split(dataset, [0.9, 0.1])
+	train_dataloader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
+	val_dataloader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
+	model = Transformer(config)
+
+	# train(config, model, train_dataloader, val_dataloader)
+
+	checkpoint = torch.load("./result/transformer/transformer.pth")
+	model.load_state_dict(checkpoint['model_state_dict'])
+	tokenizer = tiktoken.get_encoding('gpt2')
+	input_ids = tokenizer.encode("who are you")
+	input_ids = torch.tensor(input_ids, dtype=torch.long).unsqueeze(0)
+	outputs = model.generate(input_ids, 100)
+	outputs = outputs.tolist()
+	outputs = tokenizer.decode_batch(outputs)
