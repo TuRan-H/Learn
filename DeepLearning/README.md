@@ -18,3 +18,11 @@
 ├── temp: 临时文件
 └── utils: 工具代码
 ```
+
+# Requirements
+`python == 3.9.*`
+
+```
+pip install d2l==0.17.6
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
