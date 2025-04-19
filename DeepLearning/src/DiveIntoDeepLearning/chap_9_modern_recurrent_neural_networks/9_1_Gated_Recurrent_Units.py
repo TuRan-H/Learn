@@ -1,5 +1,5 @@
 """
-9.1 门控循环神经网络
+9.1 门控循环单元神经网络
 """
 
 from dataclasses import dataclass
