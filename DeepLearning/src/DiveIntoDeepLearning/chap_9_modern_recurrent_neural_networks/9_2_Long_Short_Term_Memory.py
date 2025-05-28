@@ -18,7 +18,7 @@ class Config:
     seq_length: int = field(default=35, metadata={"help": "sequence length 或者 num steps"})
     embedding_size: int = field(default=256, metadata={"help": "embedding size 或者 num_hiddens"})
     vocab_size: int = field(default=28, metadata={"help": "vocab size"})
-    num_epochs: int = field(default=100, metadata={"help": "总的epoch数"})
+    num_epochs: int = field(default=500, metadata={"help": "总的epoch数"})
     lr: float = field(default=1, metadata={"help": "学习率"})
     device: torch.device = d2l.try_gpu()
 
