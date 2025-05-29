@@ -1,9 +1,3 @@
-# 本仓库包含课程的代码来源
-* DiveIntoDeepLearning: **《动手学深度学习》** 练习代码
-* LearnHuggingface: **b站教学视频: 手把手带你实战HuggingFace Transformers练习代码** [视频链接](https://www.bilibili.com/video/BV1ma4y1g791/?spm_id_from=333.999.0.0)
-
-
-
 # 目录结构
 ```
 .
