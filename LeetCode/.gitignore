@@ -1,0 +1,8 @@
+temp
+.vscode
+__pycache__
+
+*.out
+*.exe
+
+0.test.txt
