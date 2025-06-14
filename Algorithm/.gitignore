@@ -4,8 +4,8 @@
 **/__pycache__
 
 # folder
-./.vscode
-./temp
-./lib
+.vscode
+temp
+lib
 
 # file
