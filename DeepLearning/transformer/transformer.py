@@ -6,7 +6,6 @@
 
 TODO 实现BEAM search
 TODO 实现KVCache
-TODO 实现positional embedding (PE)
 TODO 实现RoPE(Positional Encoding变种)
 TODO 实现SwiGLU (FFN中的激活函数变种)
 TODO 实现RMSNorm (LayerNorm的变种)
@@ -41,8 +40,10 @@ if "torch" in _.modules:
     _ = __import__("torch")
     if not hasattr(_.Tensor, "_custom_repr_installed"):
         original_tensor_repr = _.Tensor.__repr__
+
         def custom_tensor_repr(self):
             return f"{tuple(self.shape)}{original_tensor_repr(self)}"
+
         setattr(_.Tensor, "__repr__", custom_tensor_repr)
         setattr(_.Tensor, "_custom_repr_installed", True)
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< substitute Tensor.__repr__
@@ -275,8 +276,8 @@ class Transformer(nn.Module):
     def generate(self, inputs: torch.Tensor, max_new_tokens: int):
         """
         Args:
-                # idx: (batch_size, seq_length) 经过tokenizer编码后的输入序列
-                # max_new_tokens: 生成的最大token数量
+            idx: (batch_size, seq_length) 经过tokenizer编码后的输入序列
+            max_new_tokens: 生成的最大token数量
         #"""
         for _ in range(max_new_tokens):
             # 如果序列的长度大于block_size, 则只取最后block_size个token
@@ -491,7 +492,9 @@ if __name__ == '__main__':
     dev_dataloader = DataLoader(dev_dataset, batch_size=config.batch_size, shuffle=False)
 
     # *** 创建模型
-    positional_embedding = PositionalEmbedding(seq_len=config.block_size, embedding_dim=config.embedding_dim)
+    positional_embedding = PositionalEmbedding(
+        seq_len=config.block_size, embedding_dim=config.embedding_dim
+    )
     multi_head_attention = MultiHeadAttention(config=config)
     group_query_attention = GroupQueryAttention(
         hidden_dim=config.embedding_dim,

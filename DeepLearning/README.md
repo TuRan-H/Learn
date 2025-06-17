@@ -1,10 +1,9 @@
 # 目录结构
 ```
 .
-├── src (练习代码)
-├──── DiveIntoDeepLearning (动手学深度学习)
-├──── LearnHuggingface (手把手带你实战HuggingFace Transformers练习代码)
-├──── transformer (手写transformer模型代码)
+├── DiveIntoDeepLearning (动手学深度学习 李沐)
+├── LearnHuggingface (手把手带你实战huggingface transformers 你可是处女座啊)
+├── transformer (动手实习transformers)
 └── utils (工具代码)
 ```
 
