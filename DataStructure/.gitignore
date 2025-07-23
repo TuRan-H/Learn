@@ -1,0 +1,11 @@
+# pattern
+**/*.exe
+**/*.out
+**/__pycache__
+
+# folder
+.vscode
+temp
+lib
+
+# file
