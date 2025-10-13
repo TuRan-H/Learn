@@ -1,3 +1,5 @@
+// 基于数组的hash表实现
+
 #include <iostream>
 #include <string>
 #include <vector>
