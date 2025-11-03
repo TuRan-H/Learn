@@ -1,5 +1,21 @@
-d2l==0.17.6
-pandas==1.2.4
-# pip install torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 --index-url https://download.pytorch.org/whl/cu118
-torch==2.2.2
-tqdm==4.66.4
+# python 3.11
+--extra-index-url https://download.pytorch.org/whl/cu118
+
+accelerate==1.11.0
+d2l==0.17.0
+gradio==5.49.1
+matplotlib==3.10.7
+nltk==3.9.2
+numpy==2.3.4
+pandas==2.3.3
+peft==0.17.1
+Pillow==11.3.0
+Requests==2.32.5
+scikit_learn==1.7.2
+seqeval==1.2.2
+sympy==1.13.1
+tiktoken==0.12.0
+torch==2.6.0+cu118
+torchvision==0.21.0+cu118
+tqdm==4.67.1
+transformers==4.57.1

@@ -1,17 +1,20 @@
 # 文件夹
 /.vscode
 /dataset
+/datasets
 /data
 /model
+/models
 /result
 /results
 /temp
 /lib
 /download
 /logs
+/tmp
 
 
-# 文件pattern
+# 文件
 **/__pycache__
 **/*.pkl
 **/*.pth

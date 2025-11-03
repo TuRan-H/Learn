@@ -14,6 +14,7 @@
 """F1 metric."""
 
 import datasets
+import numpy as np
 from sklearn.metrics import f1_score
 
 import evaluate
@@ -127,4 +128,7 @@ class F1(evaluate.Metric):
         score = f1_score(
             references, predictions, labels=labels, pos_label=pos_label, average=average, sample_weight=sample_weight
         )
-        return {"f1": float(score) if score.size == 1 else score}
+        if isinstance(score, np.ndarray):
+            return {"f1": float(score) if score.size == 1 else score}
+        else:
+            return {"f1": float(score)}

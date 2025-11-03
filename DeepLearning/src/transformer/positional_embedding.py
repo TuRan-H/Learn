@@ -15,7 +15,7 @@ class LearnablePositionalEmbedding(NN.Module):
         self.embedding = NN.Embedding(seq_len, embedding_dim)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """ "
+        """ 
         Args:
             x (torch.Tensor): 输入tensor过word embedding, 形状为 (batch_size, seq_len, embedding_dim)
         """
