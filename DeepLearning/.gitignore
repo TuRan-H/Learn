@@ -12,6 +12,7 @@
 /download
 /logs
 /tmp
+/wandb
 
 
 # 文件
