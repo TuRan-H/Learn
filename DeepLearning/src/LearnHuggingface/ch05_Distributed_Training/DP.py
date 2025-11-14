@@ -1,10 +1,7 @@
 """
 b站教学视频: 【手把手带你实战HuggingFace Transformers-分布式训练篇】DataParallel原理与应用
 
-
-
 使用 `torch.nn.DataParallel` 实现数据并行, 即多卡跑程序
-
 
 backbone模型: https://huggingface.co/hfl/rbt3
 corpus: https://github.com/SophonPlus/ChineseNlpCorpus/blob/master/datasets/ChnSentiCorp_htl_all/ChnSentiCorp_htl_all.csv

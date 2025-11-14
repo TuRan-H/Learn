@@ -8,7 +8,7 @@ b站教学视频: 【手把手带你实战HuggingFace Transformers-分布式训�
 backbone: https://huggingface.co/hfl/rbt3
 corpus: https://github.com/SophonPlus/ChineseNlpCorpus/blob/master/datasets/ChnSentiCorp_htl_all/ChnSentiCorp_htl_all.csv
 
-注意: 本篇代码需要使用 `torchrun` 来运行
+command: torchrun --nproc_per_node=4 ./src/LearnHuggingface/ch05_Distributed_Training/DDP.py
 """
 
 import os
@@ -148,13 +148,13 @@ def main():
 
     # 划分数据集
     all_dataset = MyDataset(args.dataset_path)
-    # * 由于每个进程之间的数据划分不一样, 可能会导致数据泄露问题, 这里将每个进程按照一致的方式划分
+    # ATTN: 使用自定义固定seed的generator, 保证在不同进程上, 数据的划分具有一致性
     train_dataset, valid_dataset = random_split(all_dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
 
     # 实例化DataCollator
     datacollator = MyDataCollator(tokenizer)
 
-    # * 修改DataLoader的sampler为DistributedSampler, 使得不同的进程能够获取
+    # ATTN: DistrubutedSampler将一个数据集进行划分, 使的每个进程的dataloader只加载数据集的一部分
     train_dataloader = DataLoader(
         train_dataset,
         batch_size=32,

@@ -1,5 +1,7 @@
 """
 使用accelerate框架进行并行训练
+
+command: accelerate launch --config_file src/LearnHuggingface/ch05_Distributed_Training/accelerate_config.yaml src/LearnHuggingface/ch05_Distributed_Training/accelerate.py
 """
 
 import math

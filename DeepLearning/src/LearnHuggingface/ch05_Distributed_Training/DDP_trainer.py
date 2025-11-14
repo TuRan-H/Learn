@@ -2,13 +2,13 @@
 b站教学视频: 【手把手带你实战HuggingFace Transformers-分布式训练篇】分布式数据并行原理与应用
 
 代码流程:
-        1. 使用transformers框架对预训练的语言模型进行微调, 使其能够进行情感分类任务
-        2. 使用Distributed data parallel配合transformers.trainer.Trainer进行分布式训练
+    1. 使用transformers框架对预训练的语言模型进行微调, 使其能够进行情感分类任务
+    2. 使用Distributed data parallel配合transformers.trainer.Trainer进行分布式训练
 
 backbone: https://huggingface.co/hfl/rbt3
 corpus: https://github.com/SophonPlus/ChineseNlpCorpus/blob/master/datasets/ChnSentiCorp_htl_all/ChnSentiCorp_htl_all.csv
 
-注意: 本篇代码需要使用 `torchrun` 来运行
+command: torchrun --nproc_per_node=4 ./src/LearnHuggingface/ch05_Distributed_Training/DDP_trainer.py
 """
 
 import os, sys
