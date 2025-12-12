@@ -1,6 +1,4 @@
 # python 3.11
---extra-index-url https://download.pytorch.org/whl/cu118
-
 accelerate==1.11.0
 d2l==0.17.0
 gradio==5.49.1
@@ -15,8 +13,8 @@ scikit_learn==1.7.2
 seqeval==1.2.2
 sympy==1.13.1
 tiktoken==0.12.0
-torch==2.6.0+cu118
-torchvision==0.21.0+cu118
+torch==2.6.0
+torchvision==0.21.0
 tqdm==4.67.1
 transformers==4.57.1
 wandb==0.22.3
