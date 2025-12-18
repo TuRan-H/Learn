@@ -1,8 +1,4 @@
-"""
-实现transformer中的GQA (Group Query Attention)
-
-参考资料: http://arxiv.org/abs/2305.13245
-"""
+"""Group Query Attention"""
 
 import math
 import torch

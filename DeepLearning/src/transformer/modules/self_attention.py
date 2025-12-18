@@ -1,5 +1,5 @@
 """
-实现transformer中的self-attention
+self-attention
 
 参考资料: https://www.bilibili.com/video/BV19YbFeHETz/?t=1083.2&vd_source=41721633578b9591ada330add5535721
 """
@@ -20,11 +20,11 @@ class SelfAttention(nn.Module):
     def forward(self, X: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
         """
         Args:
-                X: (batch_size, seq_length, hidden_dim)
-                attention_mask: 注意力掩码
+            X: (batch_size, seq_length, hidden_dim)
+            attention_mask: 注意力掩码
 
         Returns:
-                output: (batch_size, seq_length, hidden_dim)
+            output: (batch_size, seq_length, hidden_dim)
         """
         # 通过一个大矩阵完成QKV的映射, QKV -> (batch_size, seq_length, hidden_dim * 3)
         QKV = self.proj(X)

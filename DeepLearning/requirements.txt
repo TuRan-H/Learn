@@ -19,3 +19,4 @@ tqdm==4.67.1
 transformers==4.57.1
 wandb==0.22.3
 deepspeed==0.18.2
+tyro==0.9.35
