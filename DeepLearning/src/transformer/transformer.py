@@ -3,7 +3,6 @@
 
 参考资料:
 * https://www.bilibili.com/video/BV1qWwke5E3K/?spm_id_from=333.1387.homepage.video_card.click&vd_source=41721633578b9591ada330add5535721
-
 TODO 实现BEAM search
 TODO 实现KVCache
 TODO 实现RoPE(Positional Encoding变种)
@@ -30,23 +29,8 @@ from torch.utils.tensorboard.writer import SummaryWriter
 import tiktoken
 from tqdm import tqdm
 
-from src.transformer.positional_embedding import LearnablePositionalEmbedding, PositionalEmbedding
+from src.transformer.positional_embedding import PositionalEmbedding
 from src.transformer.group_query_attention import GroupQueryAttention
-
-
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> substitute Tensor.__repr__
-_ = __import__("sys")
-if "torch" in _.modules:
-    _ = __import__("torch")
-    if not hasattr(_.Tensor, "_custom_repr_installed"):
-        original_tensor_repr = _.Tensor.__repr__
-
-        def custom_tensor_repr(self):
-            return f"{tuple(self.shape)}{original_tensor_repr(self)}"
-
-        setattr(_.Tensor, "__repr__", custom_tensor_repr)
-        setattr(_.Tensor, "_custom_repr_installed", True)
-# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< substitute Tensor.__repr__
 
 
 @dataclass
@@ -59,9 +43,7 @@ class TransformerConfig:
     seed: int = field(default=1024, metadata={"help": "随机数种子"})
     block_size: int = field(
         default=512,
-        metadata={
-            "help": "DataSet会将长序列切分为多个block, 每个block的长度为block_size. 等价于seq_len"
-        },
+        metadata={"help": "DataSet会将长序列切分为多个block, 每个block的长度为block_size. 等价于seq_len"},
     )
     batch_size: int = field(default=12, metadata={"help": "batch size"})
     vocab_size: int = field(default=50257, metadata={"help": "vocab size"})
@@ -71,9 +53,7 @@ class TransformerConfig:
     embedding_dim: int = field(default=768, metadata={"help": "embedding dim"})
     head_dim: int = field(default=64, metadata={"help": "MLA中每个head的dim"})
     learning_rate: float = field(default=3e-4, metadata={"help": "learning rate"})
-    T_max: int = field(
-        default=1000, metadata={"help": "cosine annealing learning rate scheduler的超参"}
-    )
+    T_max: int = field(default=1000, metadata={"help": "cosine annealing learning rate scheduler的超参"})
     device: str = field(default="cuda:0", metadata={"help": "device"})
     total_epoch: int = field(default=2, metadata={"help": "total epoch"})
 
@@ -83,17 +63,13 @@ class TransformerConfig:
         default="./data/mobvoi_seq_monkey_general_open_corpus.jsonl",
         metadata={"help": "数据存放路径"},
     )
-    log_dir: str = field(
-        default="./logs/transformers", metadata={"help": "tensorboard日志存放路径"}
-    )
+    log_dir: str = field(default="./logs/transformers", metadata={"help": "tensorboard日志存放路径"})
 
     # 其他参数
     is_train: bool = field(default=True, metadata={"help": "是否对模型进行训练"})
     is_eval: bool = field(default=False, metadata={"help": "是否对模型进行评估"})
     is_inference: bool = field(default=False, metadata={"help": "是否对模型进行推理"})
-    use_cache_model: bool = field(
-        default=False, metadata={"help": "推理模型的时候是否使用缓存的模型"}
-    )
+    use_cache_model: bool = field(default=False, metadata={"help": "推理模型的时候是否使用缓存的模型"})
     max_line: int = field(default=2000, metadata={"help": "读取数据集是所用的最大行数"})
 
     def __post_init__(self):
@@ -125,9 +101,7 @@ class SingleHeadAttention(nn.Module):
         seq_length的最大长度为block_size, 因此下三角矩阵的shape为 (block_size, block_size)
         值为1代表参与计算, 0代表不参与计算
         """
-        self.register_buffer(
-            "attention_mask", torch.tril(torch.ones(config.block_size, config.block_size))
-        )
+        self.register_buffer("attention_mask", torch.tril(torch.ones(config.block_size, config.block_size)))
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         # k, q, v -> (batch_size, seq_len, head_dim)
@@ -225,9 +199,7 @@ class Transformer(nn.Module):
         self.n_layer = config.n_layer
         self.token_embedding = nn.Embedding(self.vocab_size, self.embedding_dim)
         self.positional_embedding = positional_embedding
-        self.decoder_blocks = nn.Sequential(
-            *[DecoderBlock(config, attention=attention) for _ in range(self.n_layer)]
-        )
+        self.decoder_blocks = nn.Sequential(*[DecoderBlock(config, attention=attention) for _ in range(self.n_layer)])
         self.ln = nn.LayerNorm(self.embedding_dim)
         self.lm_head = nn.Linear(self.embedding_dim, self.vocab_size, bias=False)
         # ! tie weight, 即token_embedding和lm_head的权重共享
@@ -477,24 +449,18 @@ def inference(
 
 if __name__ == '__main__':
     # *** 配置参数
-    config = TransformerConfig(
-        use_cache_model=False, is_train=True, is_eval=True, is_inference=False
-    )
+    config = TransformerConfig(use_cache_model=False, is_train=True, is_eval=True, is_inference=False)
     writer = SummaryWriter(config.log_dir)
 
     # *** 导入数据集, 创建模型
     dataset = MyDataset(config.data_dir, config)
-    train_dataset, val_dataset, dev_dataset = torch.utils.data.random_split(
-        dataset, [0.5, 0.2, 0.3]
-    )
+    train_dataset, val_dataset, dev_dataset = torch.utils.data.random_split(dataset, [0.5, 0.2, 0.3])
     train_dataloader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
     dev_dataloader = DataLoader(dev_dataset, batch_size=config.batch_size, shuffle=False)
 
     # *** 创建模型
-    positional_embedding = PositionalEmbedding(
-        seq_len=config.block_size, embedding_dim=config.embedding_dim
-    )
+    positional_embedding = PositionalEmbedding(seq_len=config.block_size, embedding_dim=config.embedding_dim)
     multi_head_attention = MultiHeadAttention(config=config)
     group_query_attention = GroupQueryAttention(
         hidden_dim=config.embedding_dim,
@@ -503,9 +469,7 @@ if __name__ == '__main__':
         attention_dropout_rate=config.dropout_rate,
     )
 
-    model = Transformer(
-        config, positional_embedding=positional_embedding, attention=group_query_attention
-    )
+    model = Transformer(config, positional_embedding=positional_embedding, attention=group_query_attention)
 
     if config.is_train:
         train(
